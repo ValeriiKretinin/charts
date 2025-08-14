@@ -27,7 +27,7 @@ spec:
   {{- end }}
   {{- if .Values.ingress.web.ingressClassName }}
   ingressClassName: {{ .Values.ingress.web.ingressClassName }}
-  {{- end }}  
+  {{- end }}
   rules:
     - host: {{ .Values.ingress.web.host }}
       http:

@@ -8,13 +8,13 @@ To use your airflow cluster, you will need to make your DAG definitions (python 
 
 While there are many ways you can achieve this, we natively support the following methods.
 
-## Option 1 - Git-Sync Sidecar 
+## Option 1 - Git-Sync Sidecar
 
 You may store DAG definitions in a git repo and configure the chart to automatically sync a local copy this repo into each airflow Pod at a regular interval.
 
 > 🟦 __Tip__ 🟦
 >
-> The content of the git repo will be stored at `{dags.path}/repo/`, 
+> The content of the git repo will be stored at `{dags.path}/repo/`,
 > by default this will be `/opt/airflow/dags/repo/`.
 
 <details>
@@ -38,35 +38,35 @@ airflow:
 dags:
   ## NOTE: this is the default value
   path: /opt/airflow/dags
-  
+
   gitSync:
     enabled: true
-    
+
     ## NOTE: some git providers will need an `ssh://` prefix
     repo: "git@github.com:USERNAME/REPOSITORY.git"
     branch: "master"
     revision: "HEAD"
-    
+
     ## the sub-path within your repo where dags are located
     ## NOTE: airflow will only see dags under this path, but the whole repo will still be synced
     #repoSubPath: "path/to/dags"
-    
+
     ## number of seconds to wait between syncs
     ## NOTE: also sets `AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL` unless overwritten in `airflow.config`
     syncWait: 60
-    
+
     ## the max number of seconds allowed for a complete sync
     ## NOTE: if your repo takes a very long time to sync, you may need to increase this value
     #syncTimeout: 120
-    
+
     ## the number of consecutive failures allowed before aborting
     ## NOTE: if your repo regularly has intermittent failures, you may wish to set a non-0 value
     #maxFailures: 0
-    
+
     sshSecret: "airflow-ssh-git-secret"
     sshSecretKey: "id_rsa"
-    
-    ## NOTE: "known_hosts" verification can be disabled by setting to "" 
+
+    ## NOTE: "known_hosts" verification can be disabled by setting to ""
     sshKnownHosts: |-
       github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
 ```
@@ -75,7 +75,7 @@ dags:
 >
 > You may create `Secret/airflow-ssh-git-secret` using this command,
 > if you have the SSH private key stored under `$HOME/.ssh/id_rsa`:
-> 
+>
 > ```shell
 > kubectl create secret generic \
 >   airflow-ssh-git-secret \
@@ -106,30 +106,30 @@ airflow:
 dags:
   ## NOTE: this is the default value
   path: /opt/airflow/dags
-  
+
   gitSync:
     enabled: true
-    
+
     repo: "https://github.com/USERNAME/REPOSITORY.git"
     branch: "master"
     revision: "HEAD"
-    
+
     ## the sub-path within your repo where dags are located
     ## NOTE: airflow will only see dags under this path, but the whole repo will still be synced
     #repoSubPath: "path/to/dags"
-    
+
     ## number of seconds to wait between syncs
     ## NOTE: also sets `AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL` unless overwritten in `airflow.config`
     syncWait: 60
-    
+
     ## the max number of seconds allowed for a complete sync
     ## NOTE: if your repo takes a very long time to sync, you may need to increase this value
     #syncTimeout: 120
-    
+
     ## the number of consecutive failures allowed before aborting
     ## NOTE: if your repo regularly has intermittent failures, you may wish to set a non-0 value
     #maxFailures: 0
-    
+
     httpSecret: "airflow-http-git-secret"
     httpSecretUsernameKey: username
     httpSecretPasswordKey: password
@@ -137,9 +137,9 @@ dags:
 
 > 🟦 __Tip__ 🟦
 >
-> You may create `Secret/airflow-http-git-secret` using this command, 
+> You may create `Secret/airflow-http-git-secret` using this command,
 > replacing `MY_GIT_USERNAME` and `MY_GIT_TOKEN` with your HTTP credentials:
-> 
+>
 > ```shell
 > kubectl create secret generic \
 >   airflow-http-git-secret \
@@ -182,16 +182,16 @@ For example, to have the chart create a PersistentVolumeClaim with the `storageC
 dags:
   ## NOTE: this is the default value
   path: /opt/airflow/dags
-  
+
   persistence:
     enabled: true
-    
+
     ## NOTE: set `storageClass` to "" for the cluster-default
-    storageClass: "default" 
-    
+    storageClass: "default"
+
     ## NOTE: some types of StorageClass will ignore this request (for example, EFS)
     size: 1Gi
-    
+
     ## NOTE: as multiple Pods read the DAGs concurrently this MUST be ReadOnlyMany or ReadWriteMany
     accessMode: ReadOnlyMany
 ```
@@ -206,8 +206,8 @@ dags:
 
 ---
 
-If you wish to take more control of the PersistentVolumeClaim used for your DAG files, you may create a 
-[`PersistentVolumeClaim`](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims) 
+If you wish to take more control of the PersistentVolumeClaim used for your DAG files, you may create a
+[`PersistentVolumeClaim`](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims)
 resource inside your helm install namespace and then tell the chart to use it.
 
 For example, to have the chart use an existing PersistentVolumeClaim called `my-dags-pvc`:
@@ -216,13 +216,13 @@ For example, to have the chart use an existing PersistentVolumeClaim called `my-
 dags:
   ## NOTE: this is the default value
   path: /opt/airflow/dags
-  
+
   persistence:
     enabled: true
-    
+
     ## NOTE: this is name of your existing volume
     existingClaim: my-dags-pvc
-    
+
     ## NOTE: as multiple Pods read the DAGs concurrently this MUST be ReadOnlyMany or ReadWriteMany
     accessMode: ReadOnlyMany
 ```
@@ -268,7 +268,7 @@ airflow:
     repository: MY_REPO
     tag: MY_TAG
 
-    ## WARNING: even if set to "Always" DO NOT reuse tag names, 
+    ## WARNING: even if set to "Always" DO NOT reuse tag names,
     ##          containers only pull the latest image when restarting
     pullPolicy: IfNotPresent
 ```

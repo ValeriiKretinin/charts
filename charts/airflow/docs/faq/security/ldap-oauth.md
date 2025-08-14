@@ -5,7 +5,7 @@
 # Integrate Airflow with LDAP or OAUTH
 
 > 🟥 __Warning__ 🟥
-> 
+>
 > The `AUTH_ROLES_MAPPING` feature requires `Flask-Appbuilder>=3.2.0`.
 > Starting from Airflow 2.0.2, `Flask-Appbuilder>=3.2.0` is included by default,
 > older versions of airflow will require you to [manually install](../configuration/extra-python-packages.md) `Flask-AppBuilder>=3.2.0`.
@@ -13,7 +13,7 @@
 > 🟦 __Tip__ 🟦
 >
 > After integrating with LDAP or OAUTH, you should:
-> 
+>
 > 1. Set the `airflow.users` value to `[]`
 > 2. Manually delete any previously created users (with the airflow WebUI)
 
@@ -56,22 +56,22 @@ web:
       # only needed for airflow 1.10
       #from airflow import configuration as conf
       #SQLALCHEMY_DATABASE_URI = conf.get("core", "SQL_ALCHEMY_CONN")
-      
+
       AUTH_TYPE = AUTH_LDAP
       AUTH_LDAP_SERVER = "ldap://ldap.example.com"
       AUTH_LDAP_USE_TLS = False
-      
+
       # registration configs
       AUTH_USER_REGISTRATION = True  # allow users who are not already in the FAB DB
       AUTH_USER_REGISTRATION_ROLE = "Public"  # this role will be given in addition to any AUTH_ROLES_MAPPING
       AUTH_LDAP_FIRSTNAME_FIELD = "givenName"
       AUTH_LDAP_LASTNAME_FIELD = "sn"
       AUTH_LDAP_EMAIL_FIELD = "mail"  # if null in LDAP, email is set to: "{username}@email.notfound"
-      
+
       # bind username (for password validation)
       AUTH_LDAP_USERNAME_FORMAT = "uid=%s,ou=users,dc=example,dc=com"  # %s is replaced with the provided username
       # AUTH_LDAP_APPEND_DOMAIN = "example.com"  # bind usernames will look like: {USERNAME}@example.com
-      
+
       # search configs
       AUTH_LDAP_SEARCH = "ou=users,dc=example,dc=com"  # the LDAP search base (if non-empty, a search will ALWAYS happen)
       AUTH_LDAP_UID_FIELD = "uid"  # the username field
@@ -81,13 +81,13 @@ web:
           "cn=airflow_users,ou=groups,dc=example,dc=com": ["User"],
           "cn=airflow_admins,ou=groups,dc=example,dc=com": ["Admin"],
       }
-      
+
       # the LDAP user attribute which has their role DNs
       AUTH_LDAP_GROUP_FIELD = "memberOf"
-      
+
       # if we should replace ALL the user's roles each login, or only on registration
       AUTH_ROLES_SYNC_AT_LOGIN = True
-      
+
       # force users to re-auth after 30min of inactivity (to keep roles in sync)
       PERMANENT_SESSION_LIFETIME = 1800
 ```
@@ -115,18 +115,18 @@ web:
       # only needed for airflow 1.10
       #from airflow import configuration as conf
       #SQLALCHEMY_DATABASE_URI = conf.get("core", "SQL_ALCHEMY_CONN")
-      
+
       AUTH_TYPE = AUTH_LDAP
       AUTH_LDAP_SERVER = "ldap://ldap.example.com"
       AUTH_LDAP_USE_TLS = False
-      
+
       # registration configs
       AUTH_USER_REGISTRATION = True  # allow users who are not already in the FAB DB
       AUTH_USER_REGISTRATION_ROLE = "Public"  # this role will be given in addition to any AUTH_ROLES_MAPPING
       AUTH_LDAP_FIRSTNAME_FIELD = "givenName"
       AUTH_LDAP_LASTNAME_FIELD = "sn"
       AUTH_LDAP_EMAIL_FIELD = "mail"  # if null in LDAP, email is set to: "{username}@email.notfound"
-      
+
       # search configs
       AUTH_LDAP_SEARCH = "ou=users,dc=example,dc=com"  # the LDAP search base
       AUTH_LDAP_UID_FIELD = "uid"  # the username field
@@ -138,13 +138,13 @@ web:
           "cn=airflow_users,ou=groups,dc=example,dc=com": ["User"],
           "cn=airflow_admins,ou=groups,dc=example,dc=com": ["Admin"],
       }
-      
+
       # the LDAP user attribute which has their role DNs
       AUTH_LDAP_GROUP_FIELD = "memberOf"
-      
+
       # if we should replace ALL the user's roles each login, or only on registration
       AUTH_ROLES_SYNC_AT_LOGIN = True
-      
+
       # force users to re-auth after 30min of inactivity (to keep roles in sync)
       PERMANENT_SESSION_LIFETIME = 1800
 ```
@@ -185,14 +185,14 @@ web:
       # Custom AirflowSecurityManager
       #######################################
       from airflow.www.security import AirflowSecurityManager
-      
+
       class CustomSecurityManager(AirflowSecurityManager):
           def get_oauth_user_info(self, provider, resp):
               if provider == "github":
                   user_data = self.appbuilder.sm.oauth_remotes[provider].get("user").json()
                   emails_data = self.appbuilder.sm.oauth_remotes[provider].get("user/emails").json()
                   teams_data = self.appbuilder.sm.oauth_remotes[provider].get("user/teams").json()
-      
+
                   # unpack the user's name
                   first_name = ""
                   last_name = ""
@@ -202,14 +202,14 @@ web:
                   elif len(name) == 2:
                       first_name = name[0]
                       last_name = name[1]
-      
+
                   # unpack the user's email
                   email = ""
                   for email_data in emails_data:
                       if email_data["primary"]:
                           email = email_data["email"]
                           break
-      
+
                   # unpack the user's teams as role_keys
                   # NOTE: each role key will be "my-github-org/my-team-name"
                   role_keys = []
@@ -218,7 +218,7 @@ web:
                       team_slug = team_data["slug"]
                       team_ref = team_org + "/" + team_slug
                       role_keys.append(team_ref)
-      
+
                   return {
                       "username": "github_" + user_data.get("login", ""),
                       "first_name": first_name,
@@ -228,23 +228,23 @@ web:
                   }
               else:
                   return {}
-      
+
       #######################################
       # Actual `webserver_config.py`
       #######################################
       from flask_appbuilder.security.manager import AUTH_OAUTH
-      
+
       # only needed for airflow 1.10
       #from airflow import configuration as conf
       #SQLALCHEMY_DATABASE_URI = conf.get("core", "SQL_ALCHEMY_CONN")
-      
+
       AUTH_TYPE = AUTH_OAUTH
       SECURITY_MANAGER_CLASS = CustomSecurityManager
-      
+
       # registration configs
       AUTH_USER_REGISTRATION = True  # allow users who are not already in the FAB DB
       AUTH_USER_REGISTRATION_ROLE = "Public"  # this role will be given in addition to any AUTH_ROLES_MAPPING
-      
+
       # the list of providers which the user can choose from
       OAUTH_PROVIDERS = [
           {
@@ -261,16 +261,16 @@ web:
               },
           },
       ]
-      
+
       # a mapping from the values of `userinfo["role_keys"]` to a list of FAB roles
       AUTH_ROLES_MAPPING = {
           "my-github-org/airflow-users-team": ["User"],
           "my-github-org/airflow-admin-team": ["Admin"],
       }
-      
+
       # if we should replace ALL the user's roles each login, or only on registration
       AUTH_ROLES_SYNC_AT_LOGIN = True
-      
+
       # force users to re-auth after 30min of inactivity (to keep roles in sync)
       PERMANENT_SESSION_LIFETIME = 1800
 ```
@@ -301,13 +301,13 @@ web:
       # only needed for airflow 1.10
       #from airflow import configuration as conf
       #SQLALCHEMY_DATABASE_URI = conf.get("core", "SQL_ALCHEMY_CONN")
-      
+
       AUTH_TYPE = AUTH_OAUTH
-      
+
       # registration configs
       AUTH_USER_REGISTRATION = True  # allow users who are not already in the FAB DB
       AUTH_USER_REGISTRATION_ROLE = "Public"  # this role will be given in addition to any AUTH_ROLES_MAPPING
-      
+
       # the list of providers which the user can choose from
       OAUTH_PROVIDERS = [
         {
@@ -323,7 +323,7 @@ web:
             },
         },
       ]
-      
+
       # a mapping from the values of `userinfo["role_keys"]` to a list of FAB roles
       AUTH_ROLES_MAPPING = {
           "MyOktaGroup1": ["User"],
@@ -332,7 +332,7 @@ web:
 
       # if we should replace ALL the user's roles each login, or only on registration
       AUTH_ROLES_SYNC_AT_LOGIN = True
-      
+
       # force users to re-auth after 30min of inactivity (to keep roles in sync)
       PERMANENT_SESSION_LIFETIME = 1800
 ```

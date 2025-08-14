@@ -18,13 +18,13 @@ When compared with the embedded Postgres, an __external database__ comes with ma
 You may use [PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) for your external database.
 
 > 🟩 __Suggestion__ 🟩
-> 
+>
 > PostgreSQL is the __suggested database__, given its historically higher level of support in the airflow ecosystem.
 
 > 🟦 __Tip__ 🟦
 >
 > People often use managed Postgres services, here are some popular ones:
-> 
+>
 > Cloud Platform | Service Name
 > --- | ---
 > Amazon Web Services | [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/)
@@ -42,7 +42,7 @@ You may use [PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) for your exte
 
 > 🟦 __Tip__ 🟦
 >
-> By default, we deploy [PgBouncer](https://www.pgbouncer.org/) to reduce database load, 
+> By default, we deploy [PgBouncer](https://www.pgbouncer.org/) to reduce database load,
 > learn more about [configuring PgBouncer](pgbouncer.md) in our docs.
 
 For example, to use an external Postgres at `postgres.example.org`, with an existing `airflow_cluster1` database:
@@ -58,7 +58,7 @@ pgbouncer:
 
   ## WARNING: for PostgreSQL with password_encryption = 'SCRAM-SHA-256', the following non-default value is needed
   # authType: scram-sha-256
-  
+
   ## WARNING: for "Azure PostgreSQL", the following non-default values are needed
   # authType: scram-sha-256
   # serverSSL:
@@ -66,16 +66,16 @@ pgbouncer:
 
 externalDatabase:
   type: postgres
-  
+
   host: postgres.example.org
   port: 5432
-  
+
   ## the schema which will contain the airflow tables
   database: airflow_cluster1
 
   ## (username - option 1) a plain-text helm value
   user: my_airflow_user
-  
+
   ## (username - option 2) a Kubernetes secret in your airflow namespace
   #userSecret: "airflow-cluster1-database-credentials"
   #userSecretKey: "username"
@@ -95,11 +95,11 @@ externalDatabase:
 
 ## Option 2 - MySQL
 
-You may use [MySQL](https://en.wikipedia.org/wiki/MySQL) for your external database. 
+You may use [MySQL](https://en.wikipedia.org/wiki/MySQL) for your external database.
 
 > 🟥 __Warning__ 🟥
 >
-> You must set `explicit_defaults_for_timestamp=1` in your MySQL instance, 
+> You must set `explicit_defaults_for_timestamp=1` in your MySQL instance,
 > [see here](https://airflow.apache.org/docs/apache-airflow/stable/howto/set-up-database.html#setting-up-a-mysql-database).
 
 <details>
@@ -122,7 +122,7 @@ pgbouncer:
 
 externalDatabase:
   type: mysql
-  
+
   host: mysql.example.org
   port: 3306
 

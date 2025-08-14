@@ -4,7 +4,7 @@
 
 # Configure Pod Affinity, Selectors, Tolerations, TopologySpreadConstraints
 
-If your environment needs to use Pod [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity), 
+If your environment needs to use Pod [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity),
 [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector),
 [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/),
 or [topologySpreadConstraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/),
@@ -52,7 +52,7 @@ airflow:
     # - key: "key2"
     #   operator: "Exists"
     #   effect: "NoSchedule"
-  
+
   ## https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
   defaultTopologySpreadConstraints: []
     # - maxSkew: 1

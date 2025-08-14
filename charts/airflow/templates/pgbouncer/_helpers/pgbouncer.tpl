@@ -3,8 +3,8 @@ Define the content of the `pgbouncer.ini` config file.
 */}}
 {{- define "airflow.pgbouncer.pgbouncer.ini" }}
 [databases]
-{{- if .Values.postgresql.enabled }}
-* = host={{ printf "%s.%s.svc.%s" (include "airflow.postgresql.fullname" .) (.Release.Namespace) (.Values.airflow.clusterDomain) }} port=5432
+{{- if .Values.postgres.enabled }}
+* = host={{ printf "%s.%s.svc.%s" (include "airflow.postgres.fullname" .) (.Release.Namespace) (.Values.airflow.clusterDomain) }} port=5432
 {{- else }}
 * = host={{ .Values.externalDatabase.host }} port={{ .Values.externalDatabase.port }}
 {{- end }}

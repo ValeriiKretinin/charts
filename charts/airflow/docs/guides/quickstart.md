@@ -56,7 +56,7 @@ We recommend that you start your `custom-values.yaml` file from one of our sampl
 - [`CeleryKubernetesExecutor`](../../sample-values-CeleryKubernetesExecutor.yaml)
 
 > 🟦 __Tip__ 🟦
-> 
+>
 > The following links should help you extend your `custom-values.yaml` to suit your needs:
 >
 > - [`Docs: Key Features`](../../README.md#key-features)
@@ -67,7 +67,7 @@ We recommend that you start your `custom-values.yaml` file from one of our sampl
 > 🟦 __Tip__ 🟦
 >
 > If you need a refresher on YAML syntax, check out the following resources:
-> 
+>
 > - [`Learn YAML in Y minutes`](https://learnxinyminutes.com/docs/yaml/)
 > - [`YAML Multiline Strings`](https://yaml-multiline.info/)
 
@@ -88,8 +88,8 @@ helm install \
   --namespace "$AIRFLOW_NAMESPACE" \
   --version "8.X.X" \
   --values ./custom-values.yaml
-  
-## wait until the above command returns and resources become ready 
+
+## wait until the above command returns and resources become ready
 ## (may take a while)
 ```
 
@@ -108,7 +108,7 @@ helm install \
 ## port-forward the airflow webserver
 kubectl port-forward svc/${AIRFLOW_NAME}-web 8080:8080 --namespace $AIRFLOW_NAMESPACE
 
-## open your browser to: http://localhost:8080 
+## open your browser to: http://localhost:8080
 ## (default login: `admin`/`admin`)
 ```
 
@@ -116,5 +116,5 @@ kubectl port-forward svc/${AIRFLOW_NAME}-web 8080:8080 --namespace $AIRFLOW_NAME
 >
 > Learn more about authentication:
 >
-> - [`Manage Airflow Users`](../faq/security/airflow-users.md) 
+> - [`Manage Airflow Users`](../faq/security/airflow-users.md)
 > - [`Integrate Airflow with LDAP or OAUTH`](../faq/security/ldap-oauth.md)

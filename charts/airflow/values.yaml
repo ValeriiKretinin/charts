@@ -10,17 +10,20 @@ airflow:
   ##
   image:
     repository: apache/airflow
-    tag: 2.8.4-python3.9
+    tag: 3.0.4
     pullPolicy: IfNotPresent
     pullSecret: ""
     uid: 50000
     gid: 0
 
-  ## the airflow executor type to use
-  ## - allowed values: "CeleryExecutor", "KubernetesExecutor", "CeleryKubernetesExecutor"
-  ## - customize the "KubernetesExecutor" pod-template with `airflow.kubernetesPodTemplate.*`
-  ##
-  executor: CeleryExecutor
+  ## Multiple executors (Airflow 3+)
+  ## - Define one or more executors in order of preference; the first is default
+  ## - Allowed values: "CeleryExecutor", "KubernetesExecutor", "LocalExecutor"
+  ## - Customize the "KubernetesExecutor" pod-template with `airflow.kubernetesPodTemplate.*`
+  executors:
+    - CeleryExecutor
+
+  ## ensure matching providers are installed via `airflow.extraPipPackages` when needed
 
   ## the fernet encryption key (sets `AIRFLOW__CORE__FERNET_KEY`)
   ## - [WARNING] you must change this value to ensure the security of your airflow
@@ -30,11 +33,11 @@ airflow:
   ##
   fernetKey: "7T512UXSSmBOkpWimFHIVb8jK6lfmSAvx4mO6Arehnc="
 
-  ## the secret_key for flask (sets `AIRFLOW__WEBSERVER__SECRET_KEY`)
+  ## the secret_key for API JWT tokens (sets `AIRFLOW__API__SECRET_KEY`)
   ## - [WARNING] you must change this value to ensure the security of your airflow
-  ## - set `AIRFLOW__WEBSERVER__SECRET_KEY` with `airflow.extraEnv` from a Secret to avoid storing this in your values
+  ## - set `AIRFLOW__API__SECRET_KEY` with `airflow.extraEnv` from a Secret to avoid storing this in your values
   ##
-  webserverSecretKey: "THIS IS UNSAFE!"
+  apiSecretKey: "THIS IS UNSAFE!"
 
   ## environment variables for airflow configs
   ## - airflow env-vars are structured: "AIRFLOW__{config_section}__{config_name}"
@@ -55,51 +58,19 @@ airflow:
   ##     AIRFLOW__SMTP__SMTP_SSL: "False"
   ##     AIRFLOW__SMTP__SMTP_STARTTLS: "False"
   ##
-  ##     # domain used in airflow emails
-  ##     AIRFLOW__WEBSERVER__BASE_URL: "http://airflow.example.com"
+  ##     # domain used in airflow emails and UI
+  ##     AIRFLOW__API__BASE_URL: "http://airflow.example.com"
   ##
   ##     # ether environment variables
   ##     HTTP_PROXY: "http://proxy.example.com:8080"
   ##
   config: {}
 
-  ## a list of users to create
-  ## - templates can ONLY be used in: `password`, `email`, `firstName`, `lastName`
-  ## - templates used a bash-like syntax: ${MY_USERNAME}, $MY_USERNAME
-  ## - templates are defined in `usersTemplates`
-  ## - `role` can be a single role or a list of roles
-  ##
-  users:
-    - username: admin
-      password: admin
-      role: Admin
-      email: admin@example.com
-      firstName: admin
-      lastName: admin
+  ## Airflow 3 Simple auth manager (no FAB/users sync): define users via config only
+  ## Example:
+  ##   AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: "admin:admin,viewer:viewer"
 
-  ## bash-like templates to be used in `airflow.users`
-  ## - [WARNING] if a Secret or ConfigMap is missing, the sync Pod will crash
-  ## - [WARNING] all keys must match the regex: ^[a-zA-Z_][a-zA-Z0-9_]*$
-  ##
-  ## ____ EXAMPLE _______________
-  ##   usersTemplates
-  ##     MY_USERNAME:
-  ##       kind: configmap
-  ##       name: my-configmap
-  ##       key: username
-  ##     MY_PASSWORD:
-  ##       kind: secret
-  ##       name: my-secret
-  ##       key: password
-  ##
-  usersTemplates: {}
-
-  ## if we create a Deployment to perpetually sync `airflow.users`
-  ## - when `true`, users are updated in real-time, as ConfigMaps/Secrets change
-  ## - when `true`, users changes from the WebUI will be reverted automatically
-  ## - when `false`, users will only update one-time, after each `helm upgrade`
-  ##
-  usersUpdate: true
+  ## (removed) usersTemplates/usersUpdate – use Simple auth manager only
 
   ## a list airflow connections to create
   ## - templates can ONLY be used in: `host`, `login`, `password`, `schema`, `extra`
@@ -1279,6 +1250,59 @@ triggerer:
   extraVolumes: []
 
 ###################################
+## COMPONENT | DAG Processor (Airflow 3+)
+###################################
+dagProcessor:
+  ## if the standalone dag processor should be deployed (Airflow 3.0+)
+  enabled: true
+
+  ## number of replicas
+  replicas: 1
+
+  ## resources for the dag-processor Pods
+  resources: {}
+
+  ## scheduling
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+  topologySpreadConstraints: []
+
+  ## security context for Pods
+  securityContext: {}
+
+  ## labels/annotations
+  labels: {}
+  podLabels: {}
+  annotations: {}
+  podAnnotations: {}
+
+  ## autoscaler safety
+  safeToEvict: true
+
+  ## PodDisruptionBudget
+  podDisruptionBudget:
+    enabled: false
+    apiVersion: policy/v1
+    maxUnavailable: ""
+    minAvailable: ""
+
+  ## health checks
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 60
+    failureThreshold: 5
+
+  ## extensibility
+  extraPipPackages: []
+  extraContainers: []
+  extraInitContainers: []
+  extraVolumeMounts: []
+  extraVolumes: []
+
+###################################
 ## COMPONENT | Flower
 ###################################
 flower:
@@ -1525,7 +1549,7 @@ dags:
     ##
     image:
       repository: registry.k8s.io/git-sync/git-sync
-      tag: v3.6.9
+      tag: v4.4.2
       pullPolicy: IfNotPresent
       uid: 65533
       gid: 65533
@@ -1954,7 +1978,7 @@ pgbouncer:
   ## configs for the pgbouncer Pods' liveness probe
   ##
   livenessProbe:
-    enabled: true
+    enabled: false
     initialDelaySeconds: 5
     periodSeconds: 30
     timeoutSeconds: 60
@@ -2060,7 +2084,7 @@ pgbouncer:
 ###################################
 ## DATABASE | Embedded Postgres
 ###################################
-postgresql:
+postgres:
   ## if the `stable/postgresql` chart is used
   ## - [WARNING] the embedded Postgres is NOT SUITABLE for production deployments of Airflow
   ## - [WARNING] consider using an external database with `externalDatabase.*`
@@ -2071,30 +2095,32 @@ postgresql:
   ## configs for the postgres container image
   ##
   image:
-    registry: ghcr.io
-    repository: airflow-helm/postgresql-bitnami
-    tag: 11.22-patch.0
+    registry: docker.io
+    repository: postgres
+    tag: "16"
     pullPolicy: IfNotPresent
 
-  ## the postgres database to use
-  ##
-  postgresqlDatabase: airflow
+  ## environment variables passed to the Postgres container (for groundhog2k/postgres)
+  ## NOTE: required to initialize DB on first run
+  # env: []  # not needed when database/username/password are set; keep empty to avoid duplication
 
-  ## the postgres user to create
-  ##
-  postgresqlUsername: postgres
-
-  ## the postgres user's password
-  ##
-  postgresqlPassword: airflow
+  ## container environment for official postgres image (single source of truth)
+  ## expected by the `groundhog2k/postgres` subchart as a list of EnvVar objects
+  env:
+    - name: POSTGRES_DB
+      value: airflow
+    - name: POSTGRES_USER
+      value: postgres
+    - name: POSTGRES_PASSWORD
+      value: airflow
 
   ## the name of a pre-created secret containing the postgres password
   ##
   existingSecret: ""
 
-  ## the key within `postgresql.existingSecret` containing the password string
+  ## the key within `postgres.existingSecret` containing the password string
   ##
-  existingSecretKey: "postgresql-password"
+  existingSecretKey: "postgres-password"
 
   ## configs for the PVC of postgresql
   ##
@@ -2214,13 +2240,13 @@ redis:
   ##
   image:
     registry: docker.io
-    repository: bitnami/redis
-    tag: 6.2.14-debian-12-r17
+    repository: redis
+    tag: "7.2"
     pullPolicy: IfNotPresent
 
-  ## the redis password
+  ## the redis password (leave empty to disable AUTH)
   ##
-  password: airflow
+  password: ""
 
   ## the name of a pre-created secret containing the redis password
   ##
@@ -2229,6 +2255,11 @@ redis:
   ## the key within `redis.existingSecret` containing the password string
   ##
   existingSecretPasswordKey: "redis-password"
+
+  ## allow overriding service name used for REDIS_HOST discovery when using a different subchart
+  serviceName: ""
+  serviceNameSuffix: ""
+  passwordSecretName: ""
 
   ## configs for redis cluster mode
   ##
@@ -2352,7 +2383,7 @@ redis:
 externalRedis:
   ## the host of the external redis
   ##
-  host: localhost
+  host: ""
 
   ## the port of the external redis
   ##

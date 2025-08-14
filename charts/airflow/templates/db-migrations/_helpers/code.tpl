@@ -98,13 +98,53 @@ def apply_db_migrations() -> None:
     log.info("-------- FINISH - APPLY DB MIGRATIONS --------")
 
 
+def fix_empty_hostnames():
+    """Fix TaskInstance entries with empty hostnames for log serving."""
+    try:
+        import os
+        from airflow.models import TaskInstance
+        from airflow.utils.session import create_session
+        
+        # Build the default hostname for worker-0 
+        release_name = os.environ.get('AIRFLOW_HELM_RELEASE_NAME', 'airflow')
+        namespace = os.environ.get('AIRFLOW__KUBERNETES__NAMESPACE', 'default')
+        cluster_domain = os.environ.get('AIRFLOW__CLUSTER_DOMAIN', 'cluster.local')
+        default_hostname = f"{release_name}-worker-0.{release_name}-worker.{namespace}.svc.{cluster_domain}"
+        
+        with create_session() as session:
+            # Count TaskInstances with empty hostnames
+            empty_count = session.query(TaskInstance).filter(
+                (TaskInstance.hostname.is_(None)) | (TaskInstance.hostname == '')
+            ).count()
+            
+            if empty_count > 0:
+                log.info(f"Found {empty_count} TaskInstances with empty hostnames, fixing...")
+                
+                # Update all empty hostnames
+                session.query(TaskInstance).filter(
+                    (TaskInstance.hostname.is_(None)) | (TaskInstance.hostname == '')
+                ).update({TaskInstance.hostname: default_hostname})
+                
+                session.commit()
+                log.info(f"Fixed {empty_count} TaskInstances with hostname: {default_hostname}")
+            else:
+                log.info("No TaskInstances with empty hostnames found")
+                
+    except Exception as e:
+        log.warning(f"Failed to fix empty hostnames: {e}")
+
+
 def main(sync_forever: bool):
     # initial check & apply
     if needs_db_migrations():
         log.warning("there are unapplied db migrations, triggering apply...")
         apply_db_migrations()
+        # Fix empty hostnames after migrations
+        fix_empty_hostnames()
     else:
         log.info("there are no unapplied db migrations, continuing...")
+        # Still try to fix hostnames on startup
+        fix_empty_hostnames()
 
     if sync_forever:
         # define variable to track how long since last migrations check

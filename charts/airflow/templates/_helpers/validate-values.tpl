@@ -31,29 +31,45 @@
   {{ end }}
 {{- end }}
 
-{{/* Checks for `airflow.executor` */}}
-{{- if not (has .Values.airflow.executor (list "CeleryExecutor" "CeleryKubernetesExecutor" "KubernetesExecutor")) }}
-  {{ required "The `airflow.executor` must be one of: [CeleryExecutor, CeleryKubernetesExecutor, KubernetesExecutor]!" nil }}
+{{/* Checks for `airflow.executors` (Airflow 3 multiple executors) */}}
+{{- if not .Values.airflow.executors }}
+  {{ required "The `airflow.executors` list must be defined and non-empty for Airflow 3!" nil }}
 {{- end }}
-{{- if eq .Values.airflow.executor "CeleryExecutor" }}
+{{- $allowedExecutors := list "CeleryExecutor" "KubernetesExecutor" "LocalExecutor" }}
+{{- range $i, $ex := .Values.airflow.executors }}
+  {{- if not (has $ex $allowedExecutors) }}
+  {{ required (printf "Unsupported executor '%s'. Allowed: %v" $ex $allowedExecutors) nil }}
+  {{- end }}
+{{- end }}
+
+{{/* Derived checks based on chosen executors */}}
+{{- $hasCelery := (has "CeleryExecutor" .Values.airflow.executors) }}
+{{- $hasKube := (has "KubernetesExecutor" .Values.airflow.executors) }}
+{{- if $hasCelery }}
   {{- if not .Values.workers.enabled }}
-  {{ required "If `airflow.executor=CeleryExecutor`, then `workers.enabled` should be `true`!" nil }}
+  {{ required "If `CeleryExecutor` is enabled, then `workers.enabled` should be `true`!" nil }}
+  {{- end }}
+  {{- if and (not .Values.redis.enabled) (or (not .Values.externalRedis.host) (eq .Values.externalRedis.host "localhost")) }}
+  {{ required "If `CeleryExecutor` is enabled, configure Redis: set `redis.enabled: true` or set a real `externalRedis.host` (not 'localhost')." nil }}
   {{- end }}
 {{- end }}
-{{- if eq .Values.airflow.executor "CeleryKubernetesExecutor" }}
-  {{- if not .Values.workers.enabled }}
-  {{ required "If `airflow.executor=CeleryKubernetesExecutor`, then `workers.enabled` should be `true`!" nil }}
-  {{- end }}
+{{- $hasLocal := (has "LocalExecutor" .Values.airflow.executors) }}
+{{- if and $hasKube (not $hasCelery) (or (.Values.workers.enabled) (.Values.flower.enabled) (.Values.redis.enabled)) }}
+  {{ required "If only `KubernetesExecutor` is enabled (without `CeleryExecutor`), then [`workers.enabled`, `flower.enabled`, `redis.enabled`] must be `false`. Enable `CeleryExecutor` if you want workers/flower/redis." nil }}
 {{- end }}
-{{- if eq .Values.airflow.executor "KubernetesExecutor" }}
-  {{- if or (.Values.workers.enabled) (.Values.flower.enabled) (.Values.redis.enabled) }}
-  {{ required "If `airflow.executor=KubernetesExecutor`, then all of [`workers.enabled`, `flower.enabled`, `redis.enabled`] should be `false`!" nil }}
-  {{- end }}
+{{- if and (not $hasCelery) (.Values.workers.enabled) }}
+  {{ required "`workers.enabled` requires `CeleryExecutor`. Disable workers or add `CeleryExecutor` to `airflow.executors`." nil }}
+{{- end }}
+{{- if and (not $hasCelery) (.Values.flower.enabled) }}
+  {{ required "`flower.enabled` requires `CeleryExecutor`. Disable flower or add `CeleryExecutor` to `airflow.executors`." nil }}
+{{- end }}
+{{- if and (not $hasCelery) (.Values.redis.enabled) }}
+  {{ required "`redis.enabled` requires `CeleryExecutor` (as broker). Disable redis or add `CeleryExecutor` to `airflow.executors`." nil }}
 {{- end }}
 
 {{/* Checks for `airflow.config` */}}
 {{- if .Values.airflow.config.AIRFLOW__CORE__EXECUTOR }}
-  {{ required "Don't define `airflow.config.AIRFLOW__CORE__EXECUTOR`, it will be automatically set from `airflow.executor`!" nil }}
+  {{ required "Don't define `airflow.config.AIRFLOW__CORE__EXECUTOR`, it will be automatically set from `airflow.executors`!" nil }}
 {{- end }}
 {{- if or .Values.airflow.config.AIRFLOW__CORE__DAGS_FOLDER }}
   {{ required "Don't define `airflow.config.AIRFLOW__CORE__DAGS_FOLDER`, it will be automatically set from `dags.path`!" nil }}
@@ -147,13 +163,13 @@
     {{- if .Values.ingress.web.path | hasSuffix "/" }}
     {{ required "The `ingress.web.path` should NOT include a trailing '/'!" nil }}
     {{- end }}
-    {{- if .Values.airflow.config.AIRFLOW__WEBSERVER__BASE_URL }}
-      {{- $webUrl := .Values.airflow.config.AIRFLOW__WEBSERVER__BASE_URL | urlParse }}
+    {{- if .Values.airflow.config.AIRFLOW__API__BASE_URL }}
+      {{- $webUrl := .Values.airflow.config.AIRFLOW__API__BASE_URL | urlParse }}
       {{- if not (eq (.Values.ingress.web.path | trimSuffix "/*") (get $webUrl "path")) }}
-      {{ required (printf "The `ingress.web.path` must be compatible with `airflow.config.AIRFLOW__WEBSERVER__BASE_URL`! (try setting AIRFLOW__WEBSERVER__BASE_URL to 'http://{HOSTNAME}%s', rather than '%s')" (.Values.ingress.web.path | trimSuffix "/*") .Values.airflow.config.AIRFLOW__WEBSERVER__BASE_URL) nil }}
+      {{ required (printf "The `ingress.web.path` must be compatible with `airflow.config.AIRFLOW__API__BASE_URL`! (try setting AIRFLOW__API__BASE_URL to 'http://{HOSTNAME}%s', rather than '%s')" (.Values.ingress.web.path | trimSuffix "/*") .Values.airflow.config.AIRFLOW__API__BASE_URL) nil }}
       {{- end }}
     {{- else }}
-      {{ required (printf "If `ingress.web.path` is set, then `airflow.config.AIRFLOW__WEBSERVER__BASE_URL` must be set! (try setting AIRFLOW__WEBSERVER__BASE_URL to 'http://{HOSTNAME}%s')" (.Values.ingress.web.path | trimSuffix "/*")) nil }}
+      {{ required (printf "If `ingress.web.path` is set, then `airflow.config.AIRFLOW__API__BASE_URL` must be set! (try setting AIRFLOW__API__BASE_URL to 'http://{HOSTNAME}%s')" (.Values.ingress.web.path | trimSuffix "/*")) nil }}
     {{- end }}
   {{- end }}
 
@@ -203,8 +219,8 @@
 {{- if .Values.externalDatabase.host }}
   {{/* check if they are using externalDatabase (the default value for `externalDatabase.host` is "localhost") */}}
   {{- if not (eq .Values.externalDatabase.host "localhost") }}
-    {{- if .Values.postgresql.enabled }}
-    {{ required "If `externalDatabase.host` is set, then `postgresql.enabled` should be `false`!" nil }}
+    {{- if .Values.postgres.enabled }}
+    {{ required "If `externalDatabase.host` is set, then `postgres.enabled` should be `false`!" nil }}
     {{- end }}
     {{- if not (has .Values.externalDatabase.type (list "mysql" "postgres")) }}
     {{ required "The `externalDatabase.type` must be one of: [mysql, postgres]!" nil }}
@@ -221,3 +237,4 @@
     {{- end }}
   {{- end }}
 {{- end }}
+

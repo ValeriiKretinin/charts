@@ -1,0 +1,203 @@
+{{- if include "airflow.dag_processor.should_use" . }}
+{{- $podNodeSelector := include "airflow.podNodeSelector" (dict "Release" .Release "Values" .Values "nodeSelector" .Values.dagProcessor.nodeSelector) }}
+{{- $podTopologySpreadConstraints := include "airflow.podTopologySpreadConstraints" (dict "Release" .Release "Values" .Values "topologySpreadConstraints" .Values.dagProcessor.topologySpreadConstraints) }}
+{{- $podAffinity := include "airflow.podAffinity" (dict "Release" .Release "Values" .Values "affinity" .Values.dagProcessor.affinity) }}
+{{- $podTolerations := include "airflow.podTolerations" (dict "Release" .Release "Values" .Values "tolerations" .Values.dagProcessor.tolerations) }}
+{{- $podSecurityContext := include "airflow.podSecurityContext" (dict "Release" .Release "Values" .Values "securityContext" .Values.dagProcessor.securityContext) }}
+{{- $extraPipPackages := .Values.dagProcessor.extraPipPackages }}
+{{- $extraVolumeMounts := .Values.dagProcessor.extraVolumeMounts }}
+{{- $volumeMounts := include "airflow.volumeMounts" (dict "Release" .Release "Values" .Values "extraPipPackages" $extraPipPackages "extraVolumeMounts" $extraVolumeMounts) }}
+{{- $extraVolumes := .Values.dagProcessor.extraVolumes }}
+{{- $volumes := include "airflow.volumes" (dict "Release" .Release "Values" .Values "extraPipPackages" $extraPipPackages "extraVolumes" $extraVolumes "extraVolumeMounts" $extraVolumeMounts) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "airflow.fullname" . }}-dag-processor
+  {{- with .Values.dagProcessor.annotations }}
+  {{- if kindIs "map" . }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  labels:
+    app: {{ include "airflow.labels.app" . }}
+    component: dag-processor
+    chart: {{ include "airflow.labels.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    {{- with .Values.dagProcessor.labels }}
+    {{- if kindIs "map" . }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.dagProcessor.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      ## multiple dag-processor pods can safely run concurrently (Airflow 3 handles) but we keep zero-downtime rolling
+      maxSurge: 25%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{ include "airflow.labels.app" . }}
+      component: dag-processor
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        checksum/secret-config-envs: {{ include (print $.Template.BasePath "/config/secret-config-envs.yaml") . | sha256sum }}
+
+        {{- with .Values.airflow.podAnnotations }}
+        {{- if kindIs "map" . }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
+        {{- with .Values.dagProcessor.podAnnotations }}
+        {{- if kindIs "map" . }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.dagProcessor.safeToEvict }}
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        {{- end }}
+      labels:
+        app: {{ include "airflow.labels.app" . }}
+        component: dag-processor
+        release: {{ .Release.Name }}
+        {{- with .Values.dagProcessor.podLabels }}
+        {{- if kindIs "map" . }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
+    spec:
+      restartPolicy: Always
+      {{- if .Values.airflow.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.airflow.image.pullSecret }}
+      {{- end }}
+      {{- if and .Values.dagProcessor.nodeSelector (kindIs "map" .Values.dagProcessor.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml .Values.dagProcessor.nodeSelector | nindent 8 }}
+      {{- else if and .Values.airflow.defaultNodeSelector (kindIs "map" .Values.airflow.defaultNodeSelector) }}
+      nodeSelector:
+        {{- toYaml .Values.airflow.defaultNodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.dagProcessor.topologySpreadConstraints (kindIs "slice" .Values.dagProcessor.topologySpreadConstraints) }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.dagProcessor.topologySpreadConstraints | nindent 8 }}
+      {{- else if and .Values.airflow.defaultTopologySpreadConstraints (kindIs "slice" .Values.airflow.defaultTopologySpreadConstraints) }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.airflow.defaultTopologySpreadConstraints | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.dagProcessor.affinity (kindIs "map" .Values.dagProcessor.affinity) }}
+      affinity:
+        {{- toYaml .Values.dagProcessor.affinity | nindent 8 }}
+      {{- else if and .Values.airflow.defaultAffinity (kindIs "map" .Values.airflow.defaultAffinity) }}
+      affinity:
+        {{- toYaml .Values.airflow.defaultAffinity | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.dagProcessor.tolerations (kindIs "slice" .Values.dagProcessor.tolerations) }}
+      tolerations:
+        {{- toYaml .Values.dagProcessor.tolerations | nindent 8 }}
+      {{- else if and .Values.airflow.defaultTolerations (kindIs "slice" .Values.airflow.defaultTolerations) }}
+      tolerations:
+        {{- toYaml .Values.airflow.defaultTolerations | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.dagProcessor.securityContext (kindIs "map" .Values.dagProcessor.securityContext) }}
+      securityContext:
+        {{- toYaml .Values.dagProcessor.securityContext | nindent 8 }}
+      {{- else if and .Values.airflow.defaultSecurityContext (kindIs "map" .Values.airflow.defaultSecurityContext) }}
+      securityContext:
+        {{- toYaml .Values.airflow.defaultSecurityContext | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "airflow.serviceAccountName" . }}
+      initContainers:
+        {{- if $extraPipPackages }}
+        {{- include "airflow.init_container.install_pip_packages" (dict "Release" .Release "Values" .Values "extraPipPackages" $extraPipPackages) | indent 8 }}
+        {{- end }}
+        {{- if .Values.dags.gitSync.enabled }}
+        {{- include "airflow.container.git_sync" (dict "Release" .Release "Values" .Values "sync_one_time" "true") | indent 8 }}
+        {{- end }}
+        {{- include "airflow.init_container.check_db" (dict "Release" .Release "Values" .Values "volumeMounts" $volumeMounts) | indent 8 }}
+        {{- include "airflow.init_container.wait_for_db_migrations" (dict "Release" .Release "Values" .Values "volumeMounts" $volumeMounts) | indent 8 }}
+        {{- if .Values.airflow.extraInitContainers }}
+        {{- toYaml .Values.airflow.extraInitContainers | nindent 8 }}
+        {{- end }}
+        {{- if .Values.dagProcessor.extraInitContainers }}
+        {{- toYaml .Values.dagProcessor.extraInitContainers | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: airflow-dag-processor
+          {{- include "airflow.image" . | indent 10 }}
+          resources:
+            {{- toYaml .Values.dagProcessor.resources | nindent 12 }}
+          envFrom:
+            {{- include "airflow.envFrom" . | indent 12 }}
+          env:
+            {{- include "airflow.env" . | indent 12 }}
+            # prevent Python from loading user-site packages baked under /home/airflow/.local
+            - name: PYTHONNOUSERSITE
+              value: "1"
+          command:
+            {{- include "airflow.command" . | indent 12 }}
+          args:
+            - "bash"
+            - "-c"
+            - "exec airflow dag-processor"
+          {{- if .Values.dagProcessor.livenessProbe.enabled }}
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.dagProcessor.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.dagProcessor.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.dagProcessor.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.dagProcessor.livenessProbe.failureThreshold }}
+            exec:
+              command:
+                {{- include "airflow.livenessProbe.command" . | indent 16 }}
+                - "python"
+                - "-Wignore"
+                - "-c"
+                - |
+                  import os
+                  import sys
+                  os.environ["AIRFLOW__LOGGING__LOGGING_LEVEL"] = "ERROR"
+                  try:
+                      from airflow.jobs.job import Job
+                  except ImportError:
+                      from airflow.jobs.base_job import BaseJob as Job
+                  from airflow.utils.db import create_session
+                  from airflow.utils.net import get_hostname
+                  with create_session() as session:
+                      hostname = get_hostname()
+                      dag_proc_job = session \
+                          .query(Job) \
+                          .filter_by(job_type="DagProcessorJob") \
+                          .filter_by(hostname=hostname) \
+                          .order_by(Job.latest_heartbeat.desc()) \
+                          .limit(1) \
+                          .first()
+                      if (dag_proc_job is not None) and dag_proc_job.is_alive():
+                          pass
+                      else:
+                          sys.exit(f"The DagProcessorJob (id={getattr(dag_proc_job, 'id', None)}) for hostname '{hostname}' is not alive")
+          {{- end }}
+          {{- if $volumeMounts }}
+          volumeMounts:
+{{ $volumeMounts | nindent 12 }}
+          {{- end }}
+        {{- if .Values.dags.gitSync.enabled }}
+        {{- include "airflow.container.git_sync" . | indent 8 }}
+        {{- end }}
+        {{- if .Values.airflow.extraContainers }}
+        {{- toYaml .Values.airflow.extraContainers | nindent 8 }}
+        {{- end }}
+        {{- if .Values.dagProcessor.extraContainers }}
+        {{- toYaml .Values.dagProcessor.extraContainers | nindent 8 }}
+        {{- end }}
+      {{- if $volumes }}
+      volumes:
+{{ $volumes | nindent 8 }}
+      {{- end }}
+{{- end }}
+
+

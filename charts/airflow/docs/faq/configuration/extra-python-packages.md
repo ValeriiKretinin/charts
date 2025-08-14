@@ -43,7 +43,7 @@ airflow:
 ```
 
 > 🟨 __Note__ 🟨
-> 
+>
 > Global packages defined in `airflow.extraPipPackages` will NOT be installed in the KubernetesExecutor pod template.
 
 </details>
@@ -67,7 +67,7 @@ scheduler:
 
 > 🟦 __Tip__ 🟦
 >
-> If the same package is defined in both `airflow.extraPipPackages` and `scheduler.extraPipPackages`, 
+> If the same package is defined in both `airflow.extraPipPackages` and `scheduler.extraPipPackages`,
 > the version in `scheduler.extraPipPackages` will take precedence.
 >
 > This is because packages from deployment-specific values are listed at the END of the `pip install` command.
@@ -93,7 +93,7 @@ worker:
 
 > 🟦 __Tip__ 🟦
 >
-> If the same package is defined in both `airflow.extraPipPackages` and `worker.extraPipPackages`, 
+> If the same package is defined in both `airflow.extraPipPackages` and `worker.extraPipPackages`,
 > the version in `worker.extraPipPackages` will take precedence.
 >
 > This is because packages from deployment-specific values are listed at the END of the `pip install` command.
@@ -119,7 +119,7 @@ airflow:
 ```
 
 > 🟨 __Note__ 🟨
-> 
+>
 > Global packages defined in `airflow.extraPipPackages` will NOT be installed in the KubernetesExecutor pod template.
 
 </details>
@@ -143,7 +143,7 @@ flower:
 
 > 🟦 __Tip__ 🟦
 >
-> If the same package is defined in both `airflow.extraPipPackages` and `flower.extraPipPackages`, 
+> If the same package is defined in both `airflow.extraPipPackages` and `flower.extraPipPackages`,
 > the version in `flower.extraPipPackages` will take precedence.
 >
 > This is because packages from deployment-specific values are listed at the END of the `pip install` command.
@@ -168,7 +168,7 @@ airflow:
     PIP_TIMEOUT: 60
     PIP_INDEX_URL: https://<username>:<password>@example.com/packages/simple/
     PIP_TRUSTED_HOST: example.com
-  
+
   extraPipPackages:
     - "my-internal-package==1.0.0"
 ```
@@ -180,7 +180,7 @@ airflow:
 You may embed your python packages directly into the container image.
 
 > 🟩 __Suggestion__ 🟩
-> 
+>
 > This is the __suggested method__ for installing extra python packages.
 
 <details>
@@ -211,8 +211,8 @@ airflow:
   image:
     repository: MY_REPO
     tag: MY_TAG
-        
-    ## WARNING: even if set to "Always" DO NOT reuse tag names, 
+
+    ## WARNING: even if set to "Always" DO NOT reuse tag names,
     ##          containers only pull the latest image when restarting
     pullPolicy: IfNotPresent
 ```

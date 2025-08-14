@@ -11,7 +11,7 @@ There are multiple ways to load [Airflow Plugins](https://airflow.apache.org/doc
 You may embed your [Airflow Plugins](https://airflow.apache.org/docs/apache-airflow/stable/plugins.html) directly into the container image.
 
 > 🟩 __Suggestion__ 🟩
-> 
+>
 > This is the __suggested method__ for installing Airflow Plugins.
 
 <details>
@@ -47,7 +47,7 @@ airflow:
     repository: MY_REPO
     tag: MY_TAG
 
-    ## WARNING: even if set to "Always" DO NOT reuse tag names, 
+    ## WARNING: even if set to "Always" DO NOT reuse tag names,
     ##          containers only pull the latest image when restarting
     pullPolicy: IfNotPresent
 ```
@@ -56,7 +56,7 @@ airflow:
 
 ## Option 2 - Git-Sync DAGs Repo
 
-If you are using git-sync to [load your DAG definitions](../dags/load-dag-definitions.md), you may also include your 
+If you are using git-sync to [load your DAG definitions](../dags/load-dag-definitions.md), you may also include your
 [Airflow Plugins](https://airflow.apache.org/docs/apache-airflow/stable/plugins.html) in this repo.
 
 <details>
@@ -90,10 +90,10 @@ dags:
 
 </details>
 
-## Option 3 - Persistent Volume 
+## Option 3 - Persistent Volume
 
-You may load [Airflow Plugins](https://airflow.apache.org/docs/apache-airflow/stable/plugins.html) 
-that are stored in a Kubernetes [Persistent Volume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) 
+You may load [Airflow Plugins](https://airflow.apache.org/docs/apache-airflow/stable/plugins.html)
+that are stored in a Kubernetes [Persistent Volume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 by using the `workers.extraVolumeMounts` and `workers.extraVolumes` values.
 
 <details>
@@ -120,7 +120,7 @@ workers:
     - name: airflow-plugins
       mountPath: /opt/airflow/plugins
       readOnly: true
-      
+
       ## NOTE: if plugin files are not at the root of the volume, you may set a subPath
       #subPath: "path/to/plugins"
 
@@ -134,7 +134,7 @@ workers:
 
 ## Option 4 - ConfigMaps or Secrets
 
-You may load [Airflow Plugins](https://airflow.apache.org/docs/apache-airflow/stable/plugins.html) 
+You may load [Airflow Plugins](https://airflow.apache.org/docs/apache-airflow/stable/plugins.html)
 that are stored in Secrets or ConfigMaps by using the `workers.extraVolumeMounts` and `workers.extraVolumes` values.
 
 <details>
@@ -156,7 +156,7 @@ airflow:
     ## NOTE: this is the default value
     #AIRFLOW__CORE__PLUGINS_FOLDER: /opt/airflow/plugins
 
-workers:  
+workers:
   extraVolumeMounts:
     - name: airflow-plugins
       mountPath: /opt/airflow/plugins
@@ -168,7 +168,7 @@ workers:
         name: airflow-plugins
 ```
 
-Your `airflow-plugins` ConfigMap might look something like this. 
+Your `airflow-plugins` ConfigMap might look something like this.
 
 ```yaml
 apiVersion: v1
@@ -187,7 +187,7 @@ data:
 > 🟦 __Tip__ 🟦
 >
 > You may include the ConfigMap using the [`extraManifests`](../kubernetes/extra-manifests.md) value:
-> 
+>
 > ```yaml
 > extraManifests:
 >   - |
@@ -203,7 +203,7 @@ data:
 >     data:
 >       my_airflow_plugin.py: |
 >         from airflow.plugins_manager import AirflowPlugin
->         
+>
 >         class MyAirflowPlugin(AirflowPlugin):
 >           name = "my_airflow_plugin"
 >           ...

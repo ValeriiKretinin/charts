@@ -14,16 +14,16 @@ For example, assuming you have an Ingress Controller with an IngressClass named 
 
 ```yaml
 airflow:
-  config: 
-    AIRFLOW__WEBSERVER__BASE_URL: "http://example.com/airflow/"
+  config:
+    AIRFLOW__API__BASE_URL: "http://example.com/airflow/"
     AIRFLOW__CELERY__FLOWER_URL_PREFIX: "/airflow/flower"
 
 ingress:
   enabled: true
-  
+
   ## WARNING: set as "networking.k8s.io/v1beta1" for Kubernetes 1.18 and earlier
   apiVersion: networking.k8s.io/v1
-  
+
   ## airflow webserver ingress configs
   web:
     annotations: {}
@@ -31,7 +31,7 @@ ingress:
     path: "/airflow"
     ## WARNING: requires Kubernetes 1.18 or later, use "kubernetes.io/ingress.class" annotation for older versions
     ingressClassName: "nginx"
-    
+
   ## flower ingress configs
   flower:
     annotations: {}
@@ -47,7 +47,7 @@ We expose the `ingress.web.precedingPaths` and `ingress.web.succeedingPaths` val
 
 > 🟦 __Tip__ 🟦
 >
-> A common use-case is [enabling SSL with the aws-alb-ingress-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.1/guide/tasks/ssl_redirect/), 
+> A common use-case is [enabling SSL with the aws-alb-ingress-controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.1/guide/tasks/ssl_redirect/),
 > which needs a redirect path to be hit before the airflow-webserver one.
 
 For example, setting `ingress.web.precedingPaths` for an aws-alb-ingress-controller with SSL:

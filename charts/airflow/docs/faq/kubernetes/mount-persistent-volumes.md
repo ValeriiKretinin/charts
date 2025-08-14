@@ -36,7 +36,7 @@ airflow:
       - name: worker-tmp
         mountPath: /tmp
         readOnly: false
-  
+
     extraVolumes:
       - name: worker-tmp
         persistentVolumeClaim:

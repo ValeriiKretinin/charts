@@ -39,13 +39,13 @@ airflow:
 
   ## bash-like templates to be used in `airflow.variables`
   variablesTemplates:
-    
+
     ## define the `MY_VALUE_1` template from the `my-configmap` ConfigMap
     MY_VALUE_1:
       kind: configmap
       name: my-configmap
       key: value1
-      
+
     ## define the `MY_VALUE_2` template from the `my-secret` Secret
     MY_VALUE_2:
       kind: secret
@@ -58,5 +58,5 @@ airflow:
 
 > 🟨 __Note__ 🟨
 >
-> When `airflow.variablesUpdate` is `true`, the `airflow.variables` which use `airflow.variablesTemplates` will be updated in real-time, 
+> When `airflow.variablesUpdate` is `true`, the `airflow.variables` which use `airflow.variablesTemplates` will be updated in real-time,
 > allowing tools like [External Secrets Operator](https://github.com/external-secrets/external-secrets) to be used.

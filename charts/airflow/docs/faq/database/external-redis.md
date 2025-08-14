@@ -13,7 +13,7 @@ redis:
 externalRedis:
   host: "example.redis.cache.windows.net"
   port: 6380
-  
+
   ## the redis database-number that airflow will use
   databaseNumber: 1
 

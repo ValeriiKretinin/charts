@@ -43,7 +43,7 @@ spec:
     metadata:
       annotations:
         checksum/secret-config-envs: {{ include (print $.Template.BasePath "/config/secret-config-envs.yaml") . | sha256sum }}
-        checksum/secret-local-settings: {{ include (print $.Template.BasePath "/config/secret-local-settings.yaml") . | sha256sum }}
+        
         {{- if .Values.airflow.podAnnotations }}
         {{- toYaml .Values.airflow.podAnnotations | nindent 8 }}
         {{- end }}
@@ -125,7 +125,7 @@ spec:
             failureThreshold: {{ .Values.triggerer.livenessProbe.failureThreshold }}
             exec:
               command:
-                {{- include "airflow.command" . | indent 16 }}
+                {{- include "airflow.livenessProbe.command" . | indent 16 }}
                 - "python"
                 - "-Wignore"
                 - "-c"
@@ -162,7 +162,7 @@ spec:
           {{- end }}
           {{- if $volumeMounts }}
           volumeMounts:
-            {{- $volumeMounts | indent 12 }}
+{{ $volumeMounts | nindent 12 }}
           {{- end }}
         {{- if .Values.dags.gitSync.enabled }}
         {{- include "airflow.container.git_sync" . | indent 8 }}
@@ -175,6 +175,6 @@ spec:
         {{- end }}
       {{- if $volumes }}
       volumes:
-        {{- $volumes | indent 8 }}
+{{ $volumes | nindent 8 }}
       {{- end }}
 {{- end }}

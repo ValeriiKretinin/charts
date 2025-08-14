@@ -119,7 +119,7 @@ TBD
 >
 > - The chart now works with Airflow 2.3, however, please note the default image tag is still `2.2.5-python3.8`.
 > - Storing [logs under `airflow.extraVolumeMounts` (Pod Volumes)](docs/faq/monitoring/log-persistence.md#option-3---pod-volumes) is now a supported usage pattern.
-> - The [Scheduler "task creation check"](docs/faq/monitoring/scheduler-liveness-probe.md#scheduler-task-creation-check) now has the `scheduler.livenessProbe.taskCreationCheck.schedulerAgeBeforeCheck` 
+> - The [Scheduler "task creation check"](docs/faq/monitoring/scheduler-liveness-probe.md#scheduler-task-creation-check) now has the `scheduler.livenessProbe.taskCreationCheck.schedulerAgeBeforeCheck`
 >   value to ensure the scheduler has time to create tasks before starting the check.
 > - Airflow 2.3.0 introduced BETA support for ARM CPUs (like Apple Silicon).
 >   The chart's current default images for Postgres/Redis only support `amd64`,
@@ -137,8 +137,8 @@ TBD
 - minimum scheduler age before task-creation-check ([#612](https://github.com/airflow-helm/charts/pull/612))
 
 ### Fixed
-- fix some breaking changes from airflow 2.3.0 ([#592](https://github.com/airflow-helm/charts/pull/592)) 
-- fix wait-for-db-migrations in airflow 2.3.0 ([#576](https://github.com/airflow-helm/charts/pull/576)) 
+- fix some breaking changes from airflow 2.3.0 ([#592](https://github.com/airflow-helm/charts/pull/592))
+- fix wait-for-db-migrations in airflow 2.3.0 ([#576](https://github.com/airflow-helm/charts/pull/576))
 - fix pgbouncer liveness probe in minikube ([#560](https://github.com/airflow-helm/charts/pull/560))
 - use rsync for extraPipPackages ([#599](https://github.com/airflow-helm/charts/pull/599))
 - set `AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT` ([#608](https://github.com/airflow-helm/charts/pull/608))
@@ -287,13 +287,13 @@ TBD
 ## [8.4.0] - 2021-07-09
 
 > 🟥 __WARNINGS__ 🟥
-> 
+>
 > - The meaning of `airflow.{usersUpdate,connectionsUpdate,poolsUpdate,variablesUpdate}` have changed:
 >    - If `true`, a Deployment will perpetually sync `airflow.{users,connections,pools,variables}`, reverting changes made in the airflow UI
 >    - If `false`, a single Job is created after each `helm upgrade ...` to sync `airflow.{users,connections,pools,variables}` once
 
 > 🟨 __NOTES__ 🟨
-> 
+>
 > - You may now use Secrets and ConfigMaps to define your `airflow.{users,connections,pools,variables}`:
 >    - [How to manage airflow users?](docs/faq/security/airflow-users.md)
 >    - [How to manage airflow connections?](docs/faq/dags/airflow-connections.md)
@@ -334,7 +334,7 @@ TBD
 ### Added
 - Add support for GIT_SYNC_MAX_FAILURES ([#182](https://github.com/airflow-helm/charts/issues/182))
   - `dags.gitSync.maxFailures`
-    
+
 ## [8.2.0] - 2021-06-03
 ### Added
 - Add redis properties configuration for external redis ([#200](https://github.com/airflow-helm/charts/issues/200))
@@ -398,7 +398,7 @@ TBD
 
 ## [8.0.5] - 2021-04-06
 ### Fixed
-- extract probe path from AIRFLOW__WEBSERVER__BASE_URL + ingress path validation ([#120](https://github.com/airflow-helm/charts/issues/120))
+- extract probe path from AIRFLOW__API__BASE_URL + ingress path validation ([#120](https://github.com/airflow-helm/charts/issues/120))
 
 ## [8.0.4] - 2021-04-05
 ### Fixed
@@ -434,7 +434,7 @@ TBD
 ## [8.0.0] - 2021-03-27
 
 > 🟥 __WARNINGS__ 🟥
-> 
+>
 > - This is a MAJOR update, meaning there are BREAKING changes
 
 > 🟨 __NOTES__ 🟨
@@ -462,7 +462,7 @@ TBD
 - added `airflow.variables` to help you create/update airflow variables:
 - added `airflow.pools` to help you create/update airflow pools:
 - flower Pods are now affected by `airflow.extraPipPackages`, `airflow.extraVolumeMounts`, `airlfow.extraVolumes`
-- you no longer need to set `web.readinessProbe.scheme` or `web.livenessProbe.scheme`, we now only use HTTPS if `AIRFLOW__WEBSERVER__WEB_SERVER_SSL_CERT` and `AIRFLOW__WEBSERVER__WEB_SERVER_SSL_KEY` are set
+- you no longer need to set `web.readinessProbe.scheme` or `web.livenessProbe.scheme`, we now only use HTTPS if `AIRFLOW__API__SSL_CERT` and `AIRFLOW__API__SSL_KEY` are set
 - airflow db upgrades are now managed with a post "helm upgrade" Job, meaning it only runs once per upgrade (rather than each time the scheduler starts)
 
 #### VALUES - Added:
@@ -637,7 +637,7 @@ TBD
    - `scheduler.secretsDir`
    - `scheduler.secrets`
    - `scheduler.secretsMap`
-    
+
 ## [7.15.0] - 2020-12-15
 ### Changed
 - We now use `airflow upgradedb || airflow db upgrade` instead of `airflow initdb` with the following values ([#39](https://github.com/airflow-helm/charts/issues/39))
@@ -713,7 +713,7 @@ TBD
 - Upgraded default airflow image to `1.10.12`
 
 ## 7.7.0 - 20XX-XX-XX
-### Fixed 
+### Fixed
 - `redis.existingSecretKey` in `values.yaml` was corrected to `redis.existingSecretPasswordKey` (to align with [stable/redis](https://github.com/helm/charts/tree/master/stable/redis))
 
 ## 7.6.0 - 20XX-XX-XX
@@ -737,7 +737,7 @@ TBD
    - `flower.replicas`
 - You can now specify minReadySeconds for flower
    - `flower.minReadySeconds`
-    
+
 ### Changed
 - The chart YAML has been refactored
 - Default values of embedded charts (postgres, redis) have been set with `safe-to-evit` annotations:

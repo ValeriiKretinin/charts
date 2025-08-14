@@ -17,7 +17,7 @@ For example, to create `admin` (with "Admin" RBAC role) and `user` (with "User" 
 ```yaml
 airflow:
   users:
-    ## define the user called "admin" 
+    ## define the user called "admin"
     - username: admin
       password: admin
       role: Admin
@@ -25,11 +25,11 @@ airflow:
       firstName: admin
       lastName: admin
 
-    ## define the user called "user" 
+    ## define the user called "user"
     - username: user
       password: user123
       ## TIP: `role` can be a single role or a list of roles
-      role: 
+      role:
         - User
         - Viewer
       email: user@example.com
@@ -49,18 +49,18 @@ For example, to use templates from `Secret/my-secret` and `ConfigMap/my-configma
 ```yaml
 airflow:
   users:
-    ## define the user called "admin" 
+    ## define the user called "admin"
     - username: admin
       role: Admin
       firstName: admin
       lastName: admin
-      
+
       ## use the ADMIN_PASSWORD template defined in `airflow.usersTemplates`
       password: ${ADMIN_PASSWORD}
-           
+
       ## use the ADMIN_EMAIL template defined in `airflow.usersTemplates`
       email: ${ADMIN_EMAIL}
-        
+
   ## bash-like templates to be used in `airflow.users`
   usersTemplates:
 
@@ -69,18 +69,18 @@ airflow:
       kind: secret
       name: my-secret
       key: password
-      
+
     ## define the `ADMIN_EMAIL` template from the `my-configmap` ConfigMap
     ADMIN_EMAIL:
       kind: configmap
       name: my-configmap
       key: email
-        
+
   ## if we create a Deployment to perpetually sync `airflow.users`
   usersUpdate: true
 ```
 
 > 🟨 __Note__ 🟨
 >
-> When `airflow.usersUpdate` is `true`, the `airflow.users` which use `airflow.usersTemplates` will be updated in real-time, 
+> When `airflow.usersUpdate` is `true`, the `airflow.users` which use `airflow.usersTemplates` will be updated in real-time,
 > allowing tools like [External Secrets Operator](https://github.com/external-secrets/external-secrets) to be used.

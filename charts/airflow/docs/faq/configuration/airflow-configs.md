@@ -14,12 +14,12 @@ The `airflow.config` value makes this easier, each key-value is mounted as an en
 airflow:
   config:
     ## security
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "False"
-    
+    AIRFLOW__API__EXPOSE_CONFIG: "False"
+
     ## dags
     AIRFLOW__CORE__LOAD_EXAMPLES: "False"
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "30"
-    
+
     ## email
     AIRFLOW__EMAIL__EMAIL_BACKEND: "airflow.utils.email.send_email_smtp"
     AIRFLOW__SMTP__SMTP_HOST: "smtpmail.example.com"
@@ -27,10 +27,10 @@ airflow:
     AIRFLOW__SMTP__SMTP_PORT: "25"
     AIRFLOW__SMTP__SMTP_SSL: "False"
     AIRFLOW__SMTP__SMTP_STARTTLS: "False"
-    
+
     ## domain used in airflow emails
-    AIRFLOW__WEBSERVER__BASE_URL: "http://airflow.example.com"
-    
+    AIRFLOW__API__BASE_URL: "http://airflow.example.com"
+
     ## ether environment variables
     HTTP_PROXY: "http://proxy.example.com:8080"
 ```
@@ -38,7 +38,7 @@ airflow:
 > 🟦 __Tip__ 🟦
 >
 > To store sensitive configs in Kubernetes secrets, you may use the `airflow.extraEnv` value.
-> 
+>
 > For example, to set `AIRFLOW__CORE__FERNET_KEY` from a Secret called `airflow-fernet-key` containing a key called `value`:
 >
 > ```yaml
@@ -64,10 +64,10 @@ web:
     stringOverride: |
       from airflow import configuration as conf
       from flask_appbuilder.security.manager import AUTH_DB
-      
+
       # the SQLAlchemy connection string
       SQLALCHEMY_DATABASE_URI = conf.get('core', 'SQL_ALCHEMY_CONN')
-      
+
       # use embedded DB for auth
       AUTH_TYPE = AUTH_DB
 
@@ -97,7 +97,7 @@ airflow:
     stringOverride: |
       from airflow.models import DAG
       from airflow.exceptions import AirflowClusterPolicyViolation
-      
+
       def dag_policy(dag: DAG):
           """Ensure that DAG has at least one tag"""
           if not dag.tags:

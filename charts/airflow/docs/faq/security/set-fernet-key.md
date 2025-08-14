@@ -50,12 +50,12 @@ airflow:
   ## NOTE: this is only an example, if your value lives in a Secret, you probably want to use "Option 2" above
   config:
     AIRFLOW__CORE__FERNET_KEY_CMD: "cat /opt/airflow/fernet-key/value"
-      
+
   extraVolumeMounts:
     - name: fernet-key
       mountPath: /opt/airflow/fernet-key
       readOnly: true
-      
+
   extraVolumes:
     - name: fernet-key
       secret:

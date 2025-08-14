@@ -24,7 +24,7 @@ By default, this chart deploys [PgBouncer](https://www.pgbouncer.org/) to pool d
 > ```yaml
 > pgbouncer:
 >   authType: scram-sha-256
-> 
+>
 >   serverSSL:
 >     mode: verify-ca
 > ```
@@ -102,4 +102,3 @@ pgbouncer:
       existingSecretKey: server.crt
 
 ```
-

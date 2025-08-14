@@ -4,7 +4,7 @@
 
 # Manage Airflow Logs
 
-By default, logs are stored under `/opt/airflow/logs` within an [`emptyDir`](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) type Volume, 
+By default, logs are stored under `/opt/airflow/logs` within an [`emptyDir`](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) type Volume,
 this means they only last as long as each airflow Pod resides on the same Node.
 
 We recommend that you chose one of the following options to ensure that past airflow logs remain accessible in your Web UI.
@@ -15,11 +15,11 @@ You may use a [`PersistentVolumeClaim`](https://kubernetes.io/docs/concepts/stor
 
 > 🟨 __Note__ 🟨
 >
-> You will need a [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) that supports `ReadWriteMany` 
+> You will need a [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) that supports `ReadWriteMany`
 > access mode to be already set up in your cluster:
-> 
-> - [check here for in-tree "Volume Plugins"](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes) 
-> - [check here for "CSI Drivers"](https://kubernetes-csi.github.io/docs/drivers.html) 
+>
+> - [check here for in-tree "Volume Plugins"](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes)
+> - [check here for "CSI Drivers"](https://kubernetes-csi.github.io/docs/drivers.html)
 
 <details>
 <summary>
@@ -53,16 +53,16 @@ workers:
 logs:
   ## NOTE: this is the default value
   path: /opt/airflow/logs
-  
+
   persistence:
     enabled: true
 
     ## NOTE: set `storageClass` to "" for the cluster-default
     storageClass: "default"
-    
+
     ## NOTE: some types of StorageClass will ignore this request (for example, EFS)
     size: 5Gi
-    
+
     ## WARNING: as multiple pods will write logs, this MUST be ReadWriteMany
     accessMode: ReadWriteMany
 ```
@@ -77,8 +77,8 @@ logs:
 
 ---
 
-If you wish to take more control of the PersistentVolumeClaim used for your logs, you may create a 
-[`PersistentVolumeClaim`](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims) 
+If you wish to take more control of the PersistentVolumeClaim used for your logs, you may create a
+[`PersistentVolumeClaim`](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims)
 resource inside your helm install namespace and then tell the chart to use it.
 
 For example, to have the chart use an existing PersistentVolumeClaim called `my-logs-pvc`:
@@ -97,13 +97,13 @@ workers:
 logs:
   ## NOTE: this is the default value
   path: /opt/airflow/logs
-  
+
   persistence:
     enabled: true
 
     ## the name of your existing PersistentVolumeClaim
     existingClaim: my-logs-pvc
-    
+
     ## WARNING: as multiple pods will write logs, this MUST be ReadWriteMany
     accessMode: ReadWriteMany
 ```
@@ -118,7 +118,7 @@ consult [the official catalog](https://airflow.apache.org/docs/apache-airflow-pr
 > 🟨 __Note__ 🟨
 >
 > Remote providers __only receive logs on task completion__ (including failure), this means two important things:
-> 
+>
 > 1. logs of currently running tasks are not present in the remote provider
 > 2. if a worker crashes, the logs of currently running tasks will be lost (unless a file-system persistence is also enabled)
 
@@ -141,7 +141,7 @@ The `apache-airflow-providers-amazon` provider supports [remote logging into S3 
 > An `aws` type airflow connection called `my_aws` must exist for this example,
 > see our [guide using `airflow.connections`](../dags/airflow-connections.md#aws-connection) to do this.
 
-For example, to use an S3 bucket called `<<MY_BUCKET_NAME>>` under the object key prefix `airflow/logs` 
+For example, to use an S3 bucket called `<<MY_BUCKET_NAME>>` under the object key prefix `airflow/logs`
 with AWS access provided by an Airflow Connection called `my_aws`:
 
 ```yaml
@@ -169,7 +169,7 @@ The `apache-airflow-providers-google` provider supports [remote logging into GCS
 > A `google_cloud_platform` type airflow connection called `my_gcp` must exist for this example,
 > see our [guide using `airflow.connections`](../dags/airflow-connections.md#gcp-connection) to do this.
 
-For example, to use a GCS bucket called `<<MY_BUCKET_NAME>>` under the object key prefix `airflow/logs` 
+For example, to use a GCS bucket called `<<MY_BUCKET_NAME>>` under the object key prefix `airflow/logs`
 with GCP access provided by an Airflow Connection called `my_gcp`:
 
 ```yaml
@@ -220,7 +220,7 @@ Kubernetes has many types of Pod Volumes, consult [the official docs](https://ku
 
 > 🟦 __Tip__ 🟦
 >
-> It is possible to store both __logs__ AND __DAGs__ on the same Pod Volume by setting `dags.path` and `logs.path` to be a sub folder 
+> It is possible to store both __logs__ AND __DAGs__ on the same Pod Volume by setting `dags.path` and `logs.path` to be a sub folder
 > under a `mountPath` from `airflow.extraVolumeMounts`. _(WARNING: the volume type must support writing)_
 
 <details>
@@ -233,7 +233,7 @@ Kubernetes has many types of Pod Volumes, consult [the official docs](https://ku
 
 > 🟦 __Tip__ 🟦
 >
-> The chart has special values just for PersistentVolumeClaims (`logs.persistence.*`), 
+> The chart has special values just for PersistentVolumeClaims (`logs.persistence.*`),
 > see [`Option 1`](#option-1---persistent-volume-claim) for more information.
 
 For example, to mount a [`persistentVolumeClaim`](https://kubernetes.io/docs/concepts/storage/volumes/#persistentvolumeclaim) type volume at `/opt/airflow/logs`:

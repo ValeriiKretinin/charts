@@ -19,7 +19,7 @@ airflow:
   ## [WARNING] change from default value to ensure security
   fernetKey: "7T512UXSSmBOkpWimFHIVb8jK6lfmSAvx4mO6Arehnc="
 
-  ## the secret_key for flask (sets `AIRFLOW__WEBSERVER__SECRET_KEY`)
+  ## the secret_key for API (sets `AIRFLOW__API__SECRET_KEY`)
   ## [FAQ] https://github.com/airflow-helm/charts/blob/main/charts/airflow/docs/faq/security/set-webserver-secret-key.md
   ## [WARNING] change from default value to ensure security
   webserverSecretKey: "THIS IS UNSAFE!"
@@ -27,7 +27,7 @@ airflow:
   ## environment variables for airflow configs
   ## [FAQ] https://github.com/airflow-helm/charts/blob/main/charts/airflow/docs/faq/configuration/airflow-configs.md
   config:
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "False"
+    AIRFLOW__API__EXPOSE_CONFIG: "False"
     AIRFLOW__CORE__LOAD_EXAMPLES: "False"
 
   ## a list of users to create
@@ -151,10 +151,10 @@ web:
     stringOverride: |
       from airflow import configuration as conf
       from flask_appbuilder.security.manager import AUTH_DB
-      
+
       # the SQLAlchemy connection string
       SQLALCHEMY_DATABASE_URI = conf.get("core", "SQL_ALCHEMY_CONN")
-      
+
       # use embedded DB for auth
       AUTH_TYPE = AUTH_DB
 

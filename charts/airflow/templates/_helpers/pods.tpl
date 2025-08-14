@@ -24,12 +24,17 @@ Define the command/entrypoint configs for airflow containers
 {{- end }}
 {{- end }}
 
+{{- define "airflow.livenessProbe.command" }}
+- "/vault/vault-env"
+{{- end }}
+
 {{/*
 Define the nodeSelector for airflow pods
 EXAMPLE USAGE: {{ include "airflow.nodeSelector" (dict "Release" .Release "Values" .Values "nodeSelector" $nodeSelector) }}
 */}}
 {{- define "airflow.podNodeSelector" }}
-{{- .nodeSelector | default .Values.airflow.defaultNodeSelector | toYaml }}
+{{- $out := (.nodeSelector | default .Values.airflow.defaultNodeSelector | toYaml) }}
+{{- if (kindIs "string" $out) }}{{- $out -}}{{- else -}}{{- toYaml $out -}}{{- end }}
 {{- end }}
 
 {{/*
@@ -37,7 +42,8 @@ Define the topologySpreadConstraints for airflow pods
 EXAMPLE USAGE: {{ include "airflow.podTopologySpreadConstraints" (dict "Release" .Release "Values" .Values "topologySpreadConstraints" $topologySpreadConstraints) }}
 */}}
 {{- define "airflow.podTopologySpreadConstraints" }}
-{{- .topologySpreadConstraints | default .Values.airflow.defaultTopologySpreadConstraints | toYaml }}
+{{- $out := (.topologySpreadConstraints | default .Values.airflow.defaultTopologySpreadConstraints | toYaml) }}
+{{- if (kindIs "string" $out) }}{{- $out -}}{{- else -}}{{- toYaml $out -}}{{- end }}
 {{- end }}
 
 {{/*
@@ -45,7 +51,8 @@ Define the Affinity for airflow pods
 EXAMPLE USAGE: {{ include "airflow.podAffinity" (dict "Release" .Release "Values" .Values "affinity" $affinity) }}
 */}}
 {{- define "airflow.podAffinity" }}
-{{- .affinity | default .Values.airflow.defaultAffinity | toYaml }}
+{{- $out := (.affinity | default .Values.airflow.defaultAffinity | toYaml) }}
+{{- if (kindIs "string" $out) }}{{- $out -}}{{- else -}}{{- toYaml $out -}}{{- end }}
 {{- end }}
 
 {{/*
@@ -53,7 +60,8 @@ Define the Tolerations for airflow pods
 EXAMPLE USAGE: {{ include "airflow.podTolerations" (dict "Release" .Release "Values" .Values "tolerations" $tolerations) }}
 */}}
 {{- define "airflow.podTolerations" }}
-{{- .tolerations | default .Values.airflow.defaultTolerations | toYaml }}
+{{- $out := (.tolerations | default .Values.airflow.defaultTolerations | toYaml) }}
+{{- if (kindIs "string" $out) }}{{- $out -}}{{- else -}}{{- toYaml $out -}}{{- end }}
 {{- end }}
 
 {{/*
@@ -61,7 +69,8 @@ Define the PodSecurityContext for airflow pods
 EXAMPLE USAGE: {{ include "airflow.podSecurityContext" (dict "Release" .Release "Values" .Values "securityContext" $securityContext) }}
 */}}
 {{- define "airflow.podSecurityContext" }}
-{{- .securityContext | default .Values.airflow.defaultSecurityContext | toYaml }}
+{{- $out := (.securityContext | default .Values.airflow.defaultSecurityContext | toYaml) }}
+{{- if (kindIs "string" $out) }}{{- $out -}}{{- else -}}{{- toYaml $out -}}{{- end }}
 {{- end }}
 
 {{/*
@@ -89,7 +98,7 @@ EXAMPLE USAGE: {{ include "airflow.init_container.check_db" (dict "Release" .Rel
     {{- end }}
   {{- if .volumeMounts }}
   volumeMounts:
-    {{- .volumeMounts | indent 4 }}
+{{ .volumeMounts | nindent 4 }}
   {{- end }}
 {{- end }}
 
@@ -168,7 +177,7 @@ EXAMPLE USAGE: {{ include "airflow.init_container.wait_for_db_migrations" (dict 
     {{- end }}
   {{- if .volumeMounts }}
   volumeMounts:
-    {{- .volumeMounts | indent 4 }}
+{{ .volumeMounts | nindent 4 }}
   {{- end }}
 {{- end }}
 
@@ -380,19 +389,13 @@ EXAMPLE USAGE: {{ include "airflow.container.log_cleanup" (dict "Release" .Relea
       mountPath: {{ .Values.logs.path }}
 {{- end }}
 
+
+
 {{/*
 The list of `volumeMounts` for web/scheduler/worker/flower container
 EXAMPLE USAGE: {{ include "airflow.volumeMounts" (dict "Release" .Release "Values" .Values "extraPipPackages" $extraPipPackages "extraVolumeMounts" $extraVolumeMounts) }}
 */}}
 {{- define "airflow.volumeMounts" }}
-{{- /* airflow_local_settings.py */ -}}
-{{- if or (.Values.airflow.localSettings.stringOverride) (.Values.airflow.localSettings.existingSecret) }}
-- name: airflow-local-settings
-  mountPath: /opt/airflow/config/airflow_local_settings.py
-  subPath: airflow_local_settings.py
-  readOnly: true
-{{- end }}
-
 {{- /* dags */ -}}
 {{- if .Values.dags.persistence.enabled }}
 - name: dags-data
@@ -443,18 +446,6 @@ The list of `volumes` for web/scheduler/worker/flower Pods
 EXAMPLE USAGE: {{ include "airflow.volumes" (dict "Release" .Release "Values" .Values "extraPipPackages" $extraPipPackages "extraVolumes" $extraVolumes "extraVolumeMounts" $extraVolumeMounts) }}
 */}}
 {{- define "airflow.volumes" }}
-{{- /* airflow_local_settings.py */ -}}
-{{- if or (.Values.airflow.localSettings.stringOverride) (.Values.airflow.localSettings.existingSecret) }}
-- name: airflow-local-settings
-  secret:
-    {{- if .Values.airflow.localSettings.existingSecret }}
-    secretName: {{ .Values.airflow.localSettings.existingSecret }}
-    {{- else }}
-    secretName: {{ include "airflow.fullname" . }}-local-settings
-    {{- end }}
-    defaultMode: 0644
-{{- end }}
-
 {{- /* dags */ -}}
 {{- if .Values.dags.persistence.enabled }}
 - name: dags-data
@@ -534,73 +525,62 @@ EXAMPLE USAGE: {{ include "airflow.env" (dict "Release" .Release "Values" .Value
 */}}
 {{- define "airflow.env" }}
 {{- /* set DATABASE_USER */ -}}
-{{- if .Values.postgresql.enabled }}
-- name: DATABASE_USER
-  value: {{ .Values.postgresql.postgresqlUsername | quote }}
-{{- else }}
-{{- if .Values.externalDatabase.userSecret }}
+{{- if not .Values.postgres.enabled }}
+  {{- if .Values.externalDatabase.userSecret }}
 - name: DATABASE_USER
   valueFrom:
     secretKeyRef:
       name: {{ .Values.externalDatabase.userSecret }}
       key: {{ .Values.externalDatabase.userSecretKey }}
-{{- else }}
-{{- /* in this case, DATABASE_USER is set in the `-config-envs` Secret */ -}}
-{{- end }}
+  {{- else }}
+  {{- /* in this case, DATABASE_USER is set in the `-config-envs` Secret */ -}}
+  {{- end }}
 {{- end }}
 
 {{- /* set DATABASE_PASSWORD */ -}}
-{{- if .Values.postgresql.enabled }}
-{{- if .Values.postgresql.existingSecret }}
+{{- if .Values.postgres.enabled }}
+  {{- if .Values.postgres.existingSecret }}
 - name: DATABASE_PASSWORD
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.postgresql.existingSecret }}
-      key: {{ .Values.postgresql.existingSecretKey }}
+      name: {{ .Values.postgres.existingSecret }}
+      key: {{ .Values.postgres.existingSecretKey }}
+  {{- else }}
+  {{- /* embedded Postgres without external secret: DATABASE_PASSWORD comes from -config-envs */ -}}
+  {{- end }}
 {{- else }}
-- name: DATABASE_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "airflow.postgresql.fullname" . }}
-      key: postgresql-password
-{{- end }}
-{{- else }}
-{{- if .Values.externalDatabase.passwordSecret }}
+  {{- if .Values.externalDatabase.passwordSecret }}
 - name: DATABASE_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ .Values.externalDatabase.passwordSecret }}
       key: {{ .Values.externalDatabase.passwordSecretKey }}
-{{- else }}
-{{- /* in this case, DATABASE_PASSWORD is set in the `-config-envs` Secret */ -}}
-{{- end }}
+  {{- else }}
+  {{- /* external DB without secret: DATABASE_PASSWORD comes from -config-envs */ -}}
+  {{- end }}
 {{- end }}
 
 {{- /* set REDIS_PASSWORD */ -}}
 {{- if .Values.redis.enabled }}
-{{- if .Values.redis.existingSecret }}
+  {{- if .Values.redis.existingSecret }}
 - name: REDIS_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ .Values.redis.existingSecret }}
       key: {{ .Values.redis.existingSecretPasswordKey }}
+  {{- else }}
+  {{- /* embedded Redis without external secret: REDIS_PASSWORD comes from -config-envs */ -}}
+  {{- end }}
 {{- else }}
-- name: REDIS_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "airflow.redis.fullname" . }}
-      key: redis-password
-{{- end }}
-{{- else }}
-{{- if .Values.externalRedis.passwordSecret }}
+  {{- if .Values.externalRedis.passwordSecret }}
 - name: REDIS_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ .Values.externalRedis.passwordSecret }}
       key: {{ .Values.externalRedis.passwordSecretKey }}
-{{- else }}
-{{- /* in this case, REDIS_PASSWORD is set in the `-config-envs` Secret */ -}}
-{{- end }}
+  {{- else }}
+  {{- /* external Redis without secret: REDIS_PASSWORD comes from -config-envs */ -}}
+  {{- end }}
 {{- end }}
 
 {{- /* disable the `/entrypoint` db connection check */ -}}
@@ -611,7 +591,7 @@ EXAMPLE USAGE: {{ include "airflow.env" (dict "Release" .Release "Values" .Value
   {{- else }}
   value: "0"
   {{- end }}
-{{- end }}
+{{ end }}
 
 {{- /* set AIRFLOW__CELERY__FLOWER_BASIC_AUTH */ -}}
 {{- if .Values.flower.basicAuthSecret }}
@@ -621,6 +601,10 @@ EXAMPLE USAGE: {{ include "airflow.env" (dict "Release" .Release "Values" .Value
       name: {{ .Values.flower.basicAuthSecret }}
       key: {{ .Values.flower.basicAuthSecretKey }}
 {{- end }}
+
+{{- /* Helm release name for hostname fixing */ -}}
+- name: AIRFLOW_HELM_RELEASE_NAME
+  value: {{ include "airflow.fullname" . | quote }}
 
 {{- /* user-defined environment variables */ -}}
 {{- if .Values.airflow.extraEnv }}

@@ -28,7 +28,7 @@ airflow:
 > 🟦 __Tip__ 🟦
 >
 > You may create the `redshift-creds` Secret with `kubectl`.
-> 
+>
 > ```shell
 > kubectl create secret generic \
 >   redshift-creds \
@@ -40,7 +40,7 @@ airflow:
 > 🟦 __Tip__ 🟦
 >
 > You may read the `/opt/airflow/secrets/redshift-creds` files from within an airflow [PythonOperator](https://airflow.apache.org/docs/apache-airflow/stable/howto/operator/python.html).
-> 
+>
 > ```python
 > from pathlib import Path
 > redis_user = Path("/opt/airflow/secrets/redshift-creds/user").read_text().strip()
@@ -60,7 +60,7 @@ workers:
     - name: redshift-creds
       mountPath: /opt/airflow/secrets/redshift-creds
       readOnly: true
-  
+
   extraVolumes:
     ## spec for Volume: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#volume-v1-core
     - name: redshift-creds
@@ -82,7 +82,7 @@ airflow:
       - name: redshift-creds
         mountPath: /opt/airflow/secrets/redshift-creds
         readOnly: true
-  
+
     ## spec for Volume: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#volume-v1-core
     extraVolumes:
       - name: redshift-creds

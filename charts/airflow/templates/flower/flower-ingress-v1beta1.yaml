@@ -27,7 +27,7 @@ spec:
   {{- end }}
   {{- if .Values.ingress.flower.ingressClassName }}
   ingressClassName: {{ .Values.ingress.flower.ingressClassName }}
-  {{- end }}  
+  {{- end }}
   rules:
     - host: {{ .Values.ingress.flower.host }}
       http:

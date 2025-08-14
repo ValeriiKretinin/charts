@@ -47,8 +47,8 @@
 
 {{- /* if we show the webserver secret_key warning */ -}}
 {{- $web_secret_warning := true }}
-{{- $web_secret_envvars := list "AIRFLOW__WEBSERVER__SECRET_KEY" "AIRFLOW__WEBSERVER__SECRET_KEY_CMD" "AIRFLOW__WEBSERVER__SECRET_KEY_SECRET" }}
-{{- if not (eq .Values.airflow.webserverSecretKey "THIS IS UNSAFE!")  }}
+{{- $web_secret_envvars := list "AIRFLOW__API__SECRET_KEY" "AIRFLOW__API__SECRET_KEY_CMD" "AIRFLOW__API__SECRET_KEY_SECRET" }}
+{{- if not (eq .Values.airflow.apiSecretKey "THIS IS UNSAFE!")  }}
 {{- $web_secret_warning = false }}
 {{- end }}
 {{- range $key, $val := .Values.airflow.config }}
@@ -64,7 +64,7 @@
 
 {{- /* if we show the external database password warning */ -}}
 {{- $external_database_password_warning := false }}
-{{- if and (not .Values.postgresql.enabled) (not .Values.externalDatabase.passwordSecret) }}
+{{- if and (not .Values.postgres.enabled) (not .Values.externalDatabase.passwordSecret) }}
   {{- /* don't show a warning if the password is empty */ -}}
   {{- if .Values.externalDatabase.password }}
   {{- $external_database_password_warning = true }}
@@ -98,7 +98,7 @@
 
 {{- /* if we show the embedded postgres warning */ -}}
 {{- $embedded_postgres_warning := false }}
-{{- if .Values.postgresql.enabled }}
+{{- if .Values.postgres.enabled }}
 {{- $embedded_postgres_warning = true }}
 {{- end }}
 
@@ -174,6 +174,9 @@ Use these commands to port-forward the Services to your localhost:
 {{- if .Values.flower.enabled }}
   * Flower Dashboard:   kubectl port-forward svc/{{ include "airflow.fullname" . }}-flower 5555:5555 --namespace {{ .Release.Namespace }}
 {{- end }}
+{{- if include "airflow.dag_processor.should_use" . }}
+  * DAG Processor:      kubectl get deploy/{{ include "airflow.fullname" . }}-dag-processor --namespace {{ .Release.Namespace }} | cat
+{{- end }}
 {{ end }}
 
 {{- if or ($fernet_key_warning) ($web_secret_warning) ($extra_pip_warning) ($embedded_postgres_warning) ($known_host_warning) }}
@@ -187,7 +190,7 @@ Use these commands to port-forward the Services to your localhost:
 
 {{- if $web_secret_warning }}
 [CRITICAL] default webserver secret_key value!
-  * HELP: set a custom value with `airflow.webserverSecretKey` or `AIRFLOW__WEBSERVER__SECRET_KEY`
+  * HELP: set a custom value with `airflow.apiSecretKey` or `AIRFLOW__API__SECRET_KEY`
 {{ end }}
 
 {{- if $external_database_password_warning }}

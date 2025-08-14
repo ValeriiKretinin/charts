@@ -43,7 +43,7 @@ spec:
     metadata:
       annotations:
         checksum/secret-config-envs: {{ include (print $.Template.BasePath "/config/secret-config-envs.yaml") . | sha256sum }}
-        checksum/secret-local-settings: {{ include (print $.Template.BasePath "/config/secret-local-settings.yaml") . | sha256sum }}
+        
         {{- if .Values.airflow.podAnnotations }}
         {{- toYaml .Values.airflow.podAnnotations | nindent 8 }}
         {{- end }}
@@ -160,7 +160,7 @@ spec:
           {{- end }}
           {{- if $volumeMounts }}
           volumeMounts:
-            {{- $volumeMounts | indent 12 }}
+{{ $volumeMounts | nindent 12 }}
           {{- end }}
         {{- if .Values.dags.gitSync.enabled }}
         ## git-sync is included so "airflow plugins" & "python packages" can be stored in the dags repo
@@ -174,6 +174,6 @@ spec:
         {{- end }}
       {{- if $volumes }}
       volumes:
-        {{- $volumes | indent 8 }}
+{{ $volumes | nindent 8 }}
       {{- end }}
 {{- end }}

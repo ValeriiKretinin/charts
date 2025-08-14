@@ -39,11 +39,14 @@ spec:
       app: {{ include "airflow.labels.app" . }}
       component: worker
       release: {{ .Release.Name }}
+  {{- if .Values.workers.extraVolumeClaimTemplates }}
+  volumeClaimTemplates: {{- toYaml .Values.workers.extraVolumeClaimTemplates | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       annotations:
         checksum/secret-config-envs: {{ include (print $.Template.BasePath "/config/secret-config-envs.yaml") . | sha256sum }}
-        checksum/secret-local-settings: {{ include (print $.Template.BasePath "/config/secret-local-settings.yaml") . | sha256sum }}
+        
         {{- if .Values.airflow.podAnnotations }}
         {{- toYaml .Values.airflow.podAnnotations | nindent 8 }}
         {{- end }}
@@ -101,6 +104,7 @@ spec:
         {{- end }}
         {{- include "airflow.init_container.check_db" (dict "Release" .Release "Values" .Values "volumeMounts" $volumeMounts) | indent 8 }}
         {{- include "airflow.init_container.wait_for_db_migrations" (dict "Release" .Release "Values" .Values "volumeMounts" $volumeMounts) | indent 8 }}
+        
         {{- if .Values.airflow.extraInitContainers }}
         {{- toYaml .Values.airflow.extraInitContainers | nindent 8 }}
         {{- end }}
@@ -115,6 +119,7 @@ spec:
           envFrom:
             {{- include "airflow.envFrom" . | indent 12 }}
           env:
+            
             {{- include "airflow.env" . | indent 12 }}
             # have dumb-init only send signals to direct child process (needed for celery workers to warm shutdown)
             - name: DUMB_INIT_SETSID
@@ -215,7 +220,7 @@ spec:
             {{- end }}
           {{- if $volumeMounts }}
           volumeMounts:
-            {{- $volumeMounts | indent 12 }}
+{{ $volumeMounts | nindent 12 }}
           {{- end }}
         {{- if .Values.dags.gitSync.enabled }}
         {{- include "airflow.container.git_sync" . | indent 8 }}
@@ -229,11 +234,10 @@ spec:
         {{- if .Values.airflow.extraContainers }}
         {{- toYaml .Values.airflow.extraContainers | nindent 8 }}
         {{- end }}
-        {{- if .Values.workers.extraContainers }}
-        {{- toYaml .Values.workers.extraContainers | nindent 8 }}
-        {{- end }}
+          
       {{- if $volumes }}
       volumes:
-        {{- $volumes | indent 8 }}
+{{ $volumes | nindent 8 }}
+        
       {{- end }}
 {{- end }}

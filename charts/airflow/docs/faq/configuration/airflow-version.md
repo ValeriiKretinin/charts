@@ -33,7 +33,7 @@ For example, to use airflow `1.10.15`, with python `3.8`:
 airflow:
   # WARNING: this must be "true" for airflow 1.10
   legacyCommands: true
-  
+
   image:
     repository: apache/airflow
     tag: 1.10.15-python3.8
@@ -49,7 +49,7 @@ For example, after building and tagging your Dockerfile as `MY_REPO:MY_TAG`, you
 airflow:
   # WARNING: this must be "true" for airflow 1.10
   #legacyCommands: true
-  
+
   image:
     repository: MY_REPO
     tag: MY_TAG

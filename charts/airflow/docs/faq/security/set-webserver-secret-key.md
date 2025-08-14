@@ -10,7 +10,7 @@
 >
 > We strongly recommend that you DO NOT USE the default `airflow.webserverSecretKey` in production.
 
-You may set the webserver secret_key using the `airflow.webserverSecretKey` value, which sets the `AIRFLOW__WEBSERVER__SECRET_KEY` environment variable.
+You may set the webserver secret_key using the `airflow.webserverSecretKey` value, which sets the `AIRFLOW__API__SECRET_KEY` environment variable.
 
 For example, to define the secret_key with `airflow.webserverSecretKey`:
 
@@ -28,7 +28,7 @@ For example, to use the `value` key from the existing Secret called `airflow-web
 ```yaml
 airflow:
   extraEnv:
-    - name: AIRFLOW__WEBSERVER__SECRET_KEY
+    - name: AIRFLOW__API__SECRET_KEY
       valueFrom:
         secretKeyRef:
           name: airflow-webserver-secret-key
@@ -37,10 +37,10 @@ airflow:
 
 ## Option 3 - using `_CMD` or `_SECRET` configs
 
-You may also set the webserver secret key by specifying either the `AIRFLOW__WEBSERVER__SECRET_KEY_CMD` or `AIRFLOW__WEBSERVER__SECRET_KEY_SECRET` environment variables.
+You may also set the webserver secret key by specifying either the `AIRFLOW__API__SECRET_KEY_CMD` or `AIRFLOW__API__SECRET_KEY_SECRET` environment variables.
 Read about how the `_CMD` or `_SECRET` configs work in the ["Setting Configuration Options"](https://airflow.apache.org/docs/apache-airflow/stable/howto/set-config.html) section of the Airflow documentation.
 
-For example, to use `AIRFLOW__WEBSERVER__SECRET_KEY_CMD`:
+For example, to use `AIRFLOW__API__SECRET_KEY_CMD`:
 
 ```yaml
 airflow:
@@ -49,13 +49,13 @@ airflow:
 
   ## NOTE: this is only an example, if your value lives in a Secret, you probably want to use "Option 2" above
   config:
-    AIRFLOW__WEBSERVER__SECRET_KEY_CMD: "cat /opt/airflow/webserver-secret-key/value"
-      
+    AIRFLOW__API__SECRET_KEY_CMD: "cat /opt/airflow/webserver-secret-key/value"
+
   extraVolumeMounts:
     - name: webserver-secret-key
       mountPath: /opt/airflow/webserver-secret-key
       readOnly: true
-      
+
   extraVolumes:
     - name: webserver-secret-key
       secret:

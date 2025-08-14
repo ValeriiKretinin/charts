@@ -18,19 +18,19 @@ airflow:
   ## [NOTE] we have set `AIRFLOW__CORE__FERNET_KEY` from a Secret using `airflow.extraEnv`
   fernetKey: ""
 
-  ## the secret_key for flask
-  ## [NOTE] we have set `AIRFLOW__WEBSERVER__SECRET_KEY` from a Secret using `airflow.extraEnv`
+  ## the secret_key for API
+  ## [NOTE] we have set `AIRFLOW__API__SECRET_KEY` from a Secret using `airflow.extraEnv`
   webserverSecretKey: ""
 
   ## environment variables for airflow configs
   ## [FAQ] https://github.com/airflow-helm/charts/blob/main/charts/airflow/docs/faq/configuration/airflow-configs.md
   config:
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "False"
+    AIRFLOW__API__EXPOSE_CONFIG: "False"
     AIRFLOW__CORE__LOAD_EXAMPLES: "False"
 
-    ## enable SSL for webserver
-    AIRFLOW__WEBSERVER__WEB_SERVER_SSL_CERT: "/opt/airflow/ssl-cert/tls.crt"
-    AIRFLOW__WEBSERVER__WEB_SERVER_SSL_KEY: "/opt/airflow/ssl-cert/tls.key"
+    ## enable SSL for api-server
+    AIRFLOW__API__SSL_CERT: "/opt/airflow/ssl-cert/tls.crt"
+    AIRFLOW__API__SSL_KEY: "/opt/airflow/ssl-cert/tls.key"
 
     ## remote log storage
     AIRFLOW__LOGGING__REMOTE_LOGGING: "True"
@@ -45,8 +45,8 @@ airflow:
     AIRFLOW__SMTP__SMTP_SSL: "False"
     AIRFLOW__SMTP__SMTP_STARTTLS: "False"
 
-    ## domain used in airflow emails
-    AIRFLOW__WEBSERVER__BASE_URL: "https://airflow-cluster1.example.com/"
+    ## domain used in airflow emails & UI
+    AIRFLOW__API__BASE_URL: "https://airflow-cluster1.example.com/"
 
   ## a list of users to create
   ## [FAQ] https://github.com/airflow-helm/charts/blob/main/charts/airflow/docs/faq/security/airflow-users.md
@@ -66,8 +66,8 @@ airflow:
       type: google_cloud_platform
       description: my GCP connection
       extra: |-
-        { 
-          "extra__google_cloud_platform__num_retries": "5" 
+        {
+          "extra__google_cloud_platform__num_retries": "5"
         }
 
   ## a list airflow variables to create
@@ -101,7 +101,7 @@ airflow:
           name: airflow-cluster1-fernet-key
           key: value
     ## [FAQ] https://github.com/airflow-helm/charts/blob/main/charts/airflow/docs/faq/security/set-webserver-secret-key.md
-    - name: AIRFLOW__WEBSERVER__SECRET_KEY
+    - name: AIRFLOW__API__SECRET_KEY
       valueFrom:
         secretKeyRef:
           name: airflow-cluster1-webserver-key
@@ -186,10 +186,10 @@ web:
     stringOverride: |
       from airflow import configuration as conf
       from flask_appbuilder.security.manager import AUTH_DB
-      
+
       # the SQLAlchemy connection string
       SQLALCHEMY_DATABASE_URI = conf.get("core", "SQL_ALCHEMY_CONN")
-      
+
       # use embedded DB for auth
       AUTH_TYPE = AUTH_DB
 

@@ -40,6 +40,17 @@ rules:
   - "patch"
   - "watch"
 - apiGroups:
+    - "batch"
+  resources:
+    - jobs
+  verbs:
+    - "create"
+    - "get"
+    - "delete"
+    - "list"
+    - "patch"
+    - "watch"
+- apiGroups:
   - ""
   resources:
   - "pods/log"

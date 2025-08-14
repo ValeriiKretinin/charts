@@ -47,7 +47,7 @@ Construct the name of the airflow ServiceAccount.
 A flag indicating if a celery-like executor is selected (empty if false)
 */}}
 {{- define "airflow.executor.celery_like" -}}
-{{- if or (eq .Values.airflow.executor "CeleryExecutor") (eq .Values.airflow.executor "CeleryKubernetesExecutor") -}}
+{{- if has "CeleryExecutor" .Values.airflow.executors -}}
 true
 {{- end -}}
 {{- end -}}
@@ -56,7 +56,7 @@ true
 A flag indicating if a kubernetes-like executor is selected (empty if false)
 */}}
 {{- define "airflow.executor.kubernetes_like" -}}
-{{- if or (eq .Values.airflow.executor "KubernetesExecutor") (eq .Values.airflow.executor "CeleryKubernetesExecutor") -}}
+{{- if has "KubernetesExecutor" .Values.airflow.executors -}}
 true
 {{- end -}}
 {{- end -}}
@@ -66,7 +66,7 @@ The scheme (HTTP, HTTPS) used by the webserver.
 NOTE: this is used in the liveness/readiness probes of the webserver
 */}}
 {{- define "airflow.web.scheme" -}}
-{{- if and (.Values.airflow.config.AIRFLOW__WEBSERVER__WEB_SERVER_SSL_CERT) (.Values.airflow.config.AIRFLOW__WEBSERVER__WEB_SERVER_SSL_KEY) -}}
+{{- if and (.Values.airflow.config.AIRFLOW__API__SSL_CERT) (.Values.airflow.config.AIRFLOW__API__SSL_KEY) -}}
 HTTPS
 {{- else -}}
 HTTP
@@ -78,7 +78,7 @@ The app protocol used by the webserver.
 NOTE: this sets the `appProtocol` of the Service port (only important for Istio users)
 */}}
 {{- define "airflow.web.appProtocol" -}}
-{{- if and (.Values.airflow.config.AIRFLOW__WEBSERVER__WEB_SERVER_SSL_CERT) (.Values.airflow.config.AIRFLOW__WEBSERVER__WEB_SERVER_SSL_KEY) -}}
+{{- if and (.Values.airflow.config.AIRFLOW__API__SSL_CERT) (.Values.airflow.config.AIRFLOW__API__SSL_KEY) -}}
 https
 {{- else -}}
 http
@@ -154,25 +154,35 @@ true
 {{- end -}}
 
 {{/*
+If the standalone dag processor should be used.
+Airflow 3+ only chart: deploy when explicitly enabled, regardless of image tag parse.
+*/}}
+{{- define "airflow.dag_processor.should_use" -}}
+{{- if .Values.dagProcessor.enabled -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
 If PgBouncer should be used.
 */}}
 {{- define "airflow.pgbouncer.should_use" -}}
 {{- if .Values.pgbouncer.enabled -}}
-{{- if or (.Values.postgresql.enabled) (eq .Values.externalDatabase.type "postgres") -}}
+{{- if or (.Values.postgres.enabled) (eq .Values.externalDatabase.type "postgres") -}}
 true
 {{- end -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Construct the `postgresql.fullname` of the postgresql sub-chat chart.
+Construct the `postgres.fullname` of the postgres sub-chart.
 Used to discover the Service and Secret name created by the sub-chart.
 */}}
-{{- define "airflow.postgresql.fullname" -}}
-{{- if .Values.postgresql.fullnameOverride -}}
-{{- .Values.postgresql.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- define "airflow.postgres.fullname" -}}
+{{- if .Values.postgres.fullnameOverride -}}
+{{- .Values.postgres.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
+{{- $name := default "postgres" .Values.postgres.nameOverride -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -196,4 +206,22 @@ Used to discover the master Service and Secret name created by the sub-chart.
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Lookup a value in `.Values.postgres.env` list by env var name.
+USAGE: {{ include "airflow.postgres.envValue" (list . "POSTGRES_DB") }}
+*/}}
+{{- define "airflow.postgres.envValue" -}}
+{{- $ctx := index . 0 -}}
+{{- $name := index . 1 -}}
+{{- $out := dict "value" "" -}}
+{{- if $ctx.Values.postgres.env -}}
+  {{- range $e := $ctx.Values.postgres.env -}}
+    {{- if and $e.name (eq $e.name $name) -}}
+      {{- $_ := set $out "value" $e.value -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $out.value -}}
 {{- end -}}

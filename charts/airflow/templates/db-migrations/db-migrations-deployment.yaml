@@ -38,7 +38,7 @@ spec:
     metadata:
       annotations:
         checksum/secret-config-envs: {{ include (print $.Template.BasePath "/config/secret-config-envs.yaml") . | sha256sum }}
-        checksum/secret-local-settings: {{ include (print $.Template.BasePath "/config/secret-local-settings.yaml") . | sha256sum }}
+        
         checksum/db-migrations-script: {{ include "airflow.db_migrations.db_migrations.py" . | sha256sum }}
         {{- if .Values.airflow.podAnnotations }}
         {{- toYaml .Values.airflow.podAnnotations | nindent 8 }}
@@ -108,7 +108,7 @@ spec:
             - "-u"
             - "/mnt/scripts/db_migrations.py"
           volumeMounts:
-            {{- $volumeMounts | indent 12 }}
+{{ $volumeMounts | nindent 12 }}
             - name: scripts
               mountPath: /mnt/scripts
               readOnly: true
@@ -117,7 +117,7 @@ spec:
         {{- include "airflow.container.git_sync" . | indent 8 }}
         {{- end }}
       volumes:
-        {{- $volumes | indent 8 }}
+{{ $volumes | nindent 8 }}
         - name: scripts
           secret:
             secretName: {{ include "airflow.fullname" . }}-db-migrations

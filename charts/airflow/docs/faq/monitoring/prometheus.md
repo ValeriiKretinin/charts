@@ -8,9 +8,9 @@
 >
 > We are planning to implement native Prometheus/StatsD support in a future chart release.
 
-To be able to expose Airflow metrics to Prometheus you will need install a plugin, 
+To be able to expose Airflow metrics to Prometheus you will need install a plugin,
 one option is [epoch8/airflow-exporter](https://github.com/epoch8/airflow-exporter) which exports DAG and task metrics from Airflow.
 
-A [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#servicemonitor) 
-is a resource introduced by the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator), 
+A [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#servicemonitor)
+is a resource introduced by the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator),
 for more information, see the `serviceMonitor` section of `values.yaml`.
