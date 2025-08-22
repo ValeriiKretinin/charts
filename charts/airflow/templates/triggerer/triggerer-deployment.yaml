@@ -125,7 +125,7 @@ spec:
             failureThreshold: {{ .Values.triggerer.livenessProbe.failureThreshold }}
             exec:
               command:
-                {{- include "airflow.livenessProbe.command" . | indent 16 }}
+                {{- include "airflow.command" . | indent 16 }}
                 - "python"
                 - "-Wignore"
                 - "-c"

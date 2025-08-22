@@ -24,9 +24,7 @@ Define the command/entrypoint configs for airflow containers
 {{- end }}
 {{- end }}
 
-{{- define "airflow.livenessProbe.command" }}
-- "/vault/vault-env"
-{{- end }}
+
 
 {{/*
 Define the nodeSelector for airflow pods
